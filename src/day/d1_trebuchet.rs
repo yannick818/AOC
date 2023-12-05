@@ -11,20 +11,23 @@ fn test_trebuchet() {
 }
 
 pub fn cal_trebuchet(input: &str) -> Result<u32> {
-    let sum = input.split('\n').map(cal_line).sum();
+    let sum = input.lines().try_fold(0_u32, |mut sum, line| {
+        sum += cal_line(line)?;
+        Ok::<u32, AocError>(sum)
+    })?;
     Ok(sum)
 }
 
-fn cal_line(line: &str) -> u32 {
+fn cal_line(line: &str) -> Result<u32> {
     let numbers = line
         .chars()
         .filter(|c| c.is_numeric())
-        .map(|c| c.to_digit(10).unwrap())
+        .map(|c| c.to_digit(10))
         .collect::<Vec<_>>();
 
-    let first = numbers.first().unwrap().to_string();
-    let last = numbers.last().unwrap().to_string();
+    let first = numbers.first().ok_or("no first")?.ok_or("no parsable digit")?.to_string();
+    let last = numbers.last().ok_or("no last")?.ok_or("no parsable digit")?.to_string();
     let sum = first + &last;
 
-    sum.parse::<u32>().unwrap()
+    Ok(sum.parse::<u32>()?)
 }

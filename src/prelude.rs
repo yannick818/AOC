@@ -1,9 +1,23 @@
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AocError {
+
+    #[error("AocError: {0}")]
+    Generic(String),
+
     #[error("IO Error: {0}")]
-   Surreal(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
+
+    #[error("Parse Error: {0}")]
+    Parse(#[from] std::num::ParseIntError)
+}
+
+impl std::convert::From<&str> for AocError {
+    fn from(value: &str) -> Self {
+        Self::Generic(value.to_owned())
+    }
 }
 
 pub type Result<T> = std::result::Result<T, AocError>;

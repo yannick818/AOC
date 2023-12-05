@@ -11,9 +11,7 @@ fn main() -> Result<()> {
     let mut buffer = String::new();
     file.read_to_string(&mut buffer)?;
 
-    let d1 = cal_trebuchet(&buffer)?;
-
-    println!("{}", d1);
+    println!("Trebuchtet Ergebnis: {}", cal_trebuchet(&buffer)?);
 
     Ok(())
 }
