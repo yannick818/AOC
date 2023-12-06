@@ -14,7 +14,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/2.txt")?;
     println!("Cube Ergebnis 1: {}", cal_cubes(&input)?);
-    // println!("Cube Ergebnis 2: {}", cal_trebuchet_str(&input)?);
+    println!("Cube Ergebnis 2: {}", cal_cubes2(&input)?);
 
     Ok(())
 }
