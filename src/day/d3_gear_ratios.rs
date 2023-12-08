@@ -42,15 +42,11 @@ impl Number {
             x_range.contains(&symbol.x) && y_range.contains(&symbol.y)
         });
 
-        // println!("{} {:#?}", is_touching, self);
+        println!("{} {:#?}", is_touching, self);
         // Print Area for visualisation
         let area = input.lines().enumerate()
         .filter_map(|(x, line)| {
-            if x_range.contains(&x) {
-                Some(line)
-            } else {
-                None
-            }
+            x_range.contains(&x).then_some(line)
         })
         .map(|line| {
             &line[y_range.clone()]
@@ -72,21 +68,17 @@ struct Symbol{
 
 pub fn cal_gear_ratio(input: &str) -> Result<u32> {
     
-    let (numbers, symbols) = transform_input(input)?;
+    let (numbers, symbols) = transform_input(input);
 
     let sum = numbers.into_iter().filter_map(|number| {
-        if number.touches_symbol(&symbols, input) {
-            Some(number.value)
-        } else {
-            None
-        }
+        number.touches_symbol(&symbols, input).then_some(number.value)
     })
     .sum();
 
     Ok(sum)
 }
 
-fn transform_input(input: &str) -> Result<(Vec<Number>, Vec<Symbol>)> {
+fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
     let mut numbers = Vec::new();
     let mut symbols = Vec::new();
 
@@ -119,5 +111,5 @@ fn transform_input(input: &str) -> Result<(Vec<Number>, Vec<Symbol>)> {
         });
     });
 
-    Ok((numbers, symbols))
+    (numbers, symbols)
 }
