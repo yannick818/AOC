@@ -25,7 +25,7 @@ fn main() -> Result<()> {
     
     let input = read_file("input/4.txt")?;
     println!("Day 4.1: {}",cal_card_points(&input)?);
-    // println!("Day 2.2: {}", cal_cubes2(&input)?);
+    println!("Day 4.2: {}", count_cards(&input)?);
     
     Ok(())
 }
