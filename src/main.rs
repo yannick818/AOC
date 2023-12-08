@@ -4,6 +4,7 @@ mod prelude;
 use crate::day::d1_trebuchet::*;
 use crate::day::d2_cube_conundrum::*;
 use crate::day::d3_gear_ratios::*;
+use crate::day::d4_scratchcards::*;
 
 use crate::prelude::*;
 
@@ -20,6 +21,10 @@ fn main() -> Result<()> {
 
     let input = read_file("input/3.txt")?;
     println!("Day 3.1: {}", cal_gear_ratio(&input)?);
+    // println!("Day 2.2: {}", cal_cubes2(&input)?);
+    
+    let input = read_file("input/4.txt")?;
+    println!("Day 4.1: {}",cal_card_points(&input)?);
     // println!("Day 2.2: {}", cal_cubes2(&input)?);
     
     Ok(())
