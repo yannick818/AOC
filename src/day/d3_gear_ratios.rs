@@ -18,6 +18,7 @@ fn test_gear_ratios() {
     assert_eq!(4361, cal_gear_ratio(input).unwrap());
 }
 
+//TODO swapped x and y...
 #[derive(Debug)]
 struct Number {
     value: u32,
@@ -34,7 +35,7 @@ impl Number {
         }
     }
 
-    fn touches_symbol(&self, symbols: &[Symbol], input: &str) -> bool {
+    fn touches_symbol(&self, symbols: &[Symbol], _input: &str) -> bool {
         let x_range = (self.x.saturating_sub(1))..=(self.x+1);
         let y_range = (self.y.start.saturating_sub(1))..(self.y.end+1);
 
@@ -42,18 +43,18 @@ impl Number {
             x_range.contains(&symbol.x) && y_range.contains(&symbol.y)
         });
 
-        println!("{} {:#?}", is_touching, self);
+        // println!("{} {:#?}", is_touching, self);
         // Print Area for visualisation
-        let area = input.lines().enumerate()
-        .filter_map(|(x, line)| {
-            x_range.contains(&x).then_some(line)
-        })
-        .map(|line| {
-            &line[y_range.clone()]
-        })
-        .collect::<Vec<_>>();
+        // let area = input.lines().enumerate()
+        // .filter_map(|(x, line)| {
+        //     x_range.contains(&x).then_some(line)
+        // })
+        // .map(|line| {
+        //     &line[y_range.clone()]
+        // })
+        // .collect::<Vec<_>>();
         
-        eprintln!("{} {:#?}", is_touching, area);
+        // println!("{} {:#?}", is_touching, area);
 
         is_touching
         
@@ -82,6 +83,8 @@ fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
     let mut numbers = Vec::new();
     let mut symbols = Vec::new();
 
+    let line_len = input.lines().next().unwrap().len();
+    
     input.lines().map(|line| line.trim()).enumerate().for_each(|(x, line)| {
         // println!("Line: {line}");
         let mut num_buffer = String::new();
@@ -109,6 +112,13 @@ fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
                 },
             }
         });
+
+        if !num_buffer.is_empty() {
+            let value = num_buffer.parse::<u32>().unwrap();
+            let len = num_buffer.len();
+            let number = Number::new(value, x, (line_len-len-1)..(line_len-1));
+            numbers.push(number);
+        }
     });
 
     (numbers, symbols)
