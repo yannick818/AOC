@@ -43,12 +43,12 @@ humidity-to-location map:
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone)]
 struct Id<T> {
-    id: u32,
+    id: u64,
     _phantom: PhantomData<T>,
 }
 
-impl<T> From<u32> for Id<T> {
-    fn from(id: u32) -> Self {
+impl<T> From<u64> for Id<T> {
+    fn from(id: u64) -> Self {
         Self {
             id,
             _phantom: PhantomData,
@@ -74,15 +74,15 @@ struct Humidity;
 struct Location;
 
 struct Region<A, B> {
-    dest: u32,
-    src: u32, 
-    len: u32,
+    dest: u64,
+    src: u64, 
+    len: u64,
     _phantom: PhantomData<(A, B)>,
 }
 
 impl<A, B> Region<Id<A>, Id<B>> {
 
-    fn new(dest: u32, src: u32, len: u32) -> Self {
+    fn new(dest: u64, src: u64, len: u64) -> Self {
         Self {
             dest,
             src,
@@ -97,9 +97,9 @@ impl<A, B> Region<Id<A>, Id<B>> {
     }
 
     fn convert(&self, id: &Id<A>) -> Id<B> {
-        let delta = self.dest as i32 - self.src as i32;
+        let delta = self.dest as i64 - self.src as i64;
 
-        Id::<B>::from((id.id as i32 + delta) as u32)
+        Id::<B>::from((id.id as i64 + delta) as u64)
     }
 
     fn map(ranges: &[Self], id: &Id<A>) -> Id<B> {
@@ -129,7 +129,7 @@ impl Almanac {
         let seeds = input.lines()
         .next().unwrap().split(": ").nth(1).unwrap()
         .split(' ').map(|s| {
-            let num = s.parse::<u32>().unwrap();
+            let num = s.parse::<u64>().unwrap();
             Id::<Seed>::from(num)
         }).collect::<Vec<_>>();
 
@@ -156,7 +156,7 @@ impl Almanac {
     fn cal_map<A, B>(input: &str, name: &str) -> IdMap<A, B>{
         input.split(name).nth(1).unwrap().split("\n\n").next().unwrap()
         .lines().map(|line| {
-            let vec = line.split(' ').map(|s| s.parse().unwrap()).collect::<Vec<u32>>();
+            let vec = line.split(' ').map(|s| s.parse().unwrap()).collect::<Vec<u64>>();
             (vec[0], vec[1], vec[2])
         }).map(|(dest, src, len)| {
             Region::new(dest, src, len)
@@ -165,7 +165,7 @@ impl Almanac {
 
 }
 
-pub fn cal_lowest_location(input: &str) -> Result<u32> {
+pub fn cal_lowest_location(input: &str) -> Result<u64> {
     let almanac = Almanac::new(input);
     let min = almanac.seeds.iter().map(|seed| {
         let soil = Region::map(&almanac.seed_to_soil, seed);
