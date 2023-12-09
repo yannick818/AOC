@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hash, marker::PhantomData};
+use std::marker::PhantomData;
 
 use crate::prelude::*;
 
@@ -57,40 +57,71 @@ impl<T> From<u32> for Id<T> {
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct SeedId;
+struct Seed;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct SoilId;
+struct Soil;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct FertilizerId;
+struct Fertilizer;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct WaterId;
+struct Water;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct LightId;
+struct Light;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct TemperatureId;
+struct Temperature;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct HumidityId;
+struct Humidity;
 #[derive(Eq, PartialEq, Hash, Clone, Copy)]
-struct LocationId;
+struct Location;
 
-type Seed = Id<SeedId>;
-type Soil = Id<SoilId>;
-type Fertilizer = Id<FertilizerId>;
-type Water = Id<WaterId>;
-type Light = Id<LightId>;
-type Temperature = Id<TemperatureId>;
-type Humidity = Id<HumidityId>;
-type Location = Id<LocationId>;
+struct Region<A, B> {
+    dest: u32,
+    src: u32, 
+    len: u32,
+    _phantom: PhantomData<(A, B)>,
+}
+
+impl<A, B> Region<Id<A>, Id<B>> {
+
+    fn new(dest: u32, src: u32, len: u32) -> Self {
+        Self {
+            dest,
+            src,
+            len,
+            _phantom: PhantomData,
+        }
+    }
+
+    fn contains(&self, id: &Id<A>) -> bool {
+        let range = self.src..(self.src+self.len);
+        range.contains(&id.id)
+    }
+
+    fn convert(&self, id: &Id<A>) -> Id<B> {
+        let delta = self.dest as i32 - self.src as i32;
+
+        Id::<B>::from((id.id as i32 + delta) as u32)
+    }
+
+    fn map(ranges: &[Self], id: &Id<A>) -> Id<B> {
+        match ranges.iter().find(|r| r.contains(id)) {
+            Some(r) => r.convert(id),
+            None => Id::<B>::from(id.id),
+        }
+    }
+
+}
+
+type IdMap<A, B> = Vec<Region<Id<A>, Id<B>>>;
 
 struct Almanac {
-    seeds: Vec<Seed>,
-    seed_to_soil: HashMap<Seed, Soil>,
-    soil_to_fertilizer: HashMap<Soil, Fertilizer>,
-    fertilizer_to_water: HashMap<Fertilizer, Water>,
-    water_to_light: HashMap<Water, Light>,
-    light_to_temperature: HashMap<Light, Temperature>,
-    temperature_to_humidity: HashMap<Temperature, Humidity>,
-    humidity_to_location: HashMap<Humidity, Location>,    
+    seeds: Vec<Id<Seed>>,
+    seed_to_soil: IdMap<Seed, Soil>,
+    soil_to_fertilizer: IdMap<Soil, Fertilizer>,
+    fertilizer_to_water: IdMap<Fertilizer, Water>,
+    water_to_light: IdMap<Water, Light>,
+    light_to_temperature: IdMap<Light, Temperature>,
+    temperature_to_humidity: IdMap<Temperature, Humidity>,
+    humidity_to_location: IdMap<Humidity, Location>,
 }
 
 impl Almanac {
@@ -99,7 +130,7 @@ impl Almanac {
         .next().unwrap().split(": ").nth(1).unwrap()
         .split(' ').map(|s| {
             let num = s.parse::<u32>().unwrap();
-            Seed::from(num)
+            Id::<Seed>::from(num)
         }).collect::<Vec<_>>();
 
         let seed_to_soil = Almanac::cal_map(input, "seed-to-soil map:\n");
@@ -122,17 +153,14 @@ impl Almanac {
         }
     }
 
-    fn cal_map<K: From<u32> + Hash + Eq + PartialEq, V: From<u32>>(input: &str, name: &str) -> HashMap<K, V> {
+    fn cal_map<A, B>(input: &str, name: &str) -> IdMap<A, B>{
         input.split(name).nth(1).unwrap().split("\n\n").next().unwrap()
         .lines().map(|line| {
             let vec = line.split(' ').map(|s| s.parse().unwrap()).collect::<Vec<u32>>();
             (vec[0], vec[1], vec[2])
-        }).fold(HashMap::new(), |mut map, (dest, src, len)| {
-            for i in 0..len {
-                map.insert(K::from(src+i), V::from(dest+i));
-            }
-            map
-        })
+        }).map(|(dest, src, len)| {
+            Region::new(dest, src, len)
+        }).collect()
     }
 
 }
@@ -140,13 +168,13 @@ impl Almanac {
 pub fn cal_lowest_location(input: &str) -> Result<u32> {
     let almanac = Almanac::new(input);
     let min = almanac.seeds.iter().map(|seed| {
-        let soil = almanac.seed_to_soil.get(seed).copied().unwrap_or(Soil::from(seed.id));
-        let fertilizer = almanac.soil_to_fertilizer.get(&soil).copied().unwrap_or(Fertilizer::from(soil.id));
-        let water = almanac.fertilizer_to_water.get(&fertilizer).copied().unwrap_or(Water::from(fertilizer.id));
-        let light = almanac.water_to_light.get(&water).copied().unwrap_or(Light::from(water.id));
-        let temperature = almanac.light_to_temperature.get(&light).copied().unwrap_or(Temperature::from(light.id));
-        let humidity = almanac.temperature_to_humidity.get(&temperature).copied().unwrap_or(Humidity::from(temperature.id));
-        let location = almanac.humidity_to_location.get(&humidity).copied().unwrap_or(Location::from(humidity.id));
+        let soil = Region::map(&almanac.seed_to_soil, seed);
+        let fertilizer = Region::map(&almanac.soil_to_fertilizer, &soil);
+        let water = Region::map(&almanac.fertilizer_to_water, &fertilizer);
+        let light = Region::map(&almanac.water_to_light, &water);
+        let temperature = Region::map(&almanac.light_to_temperature, &light);
+        let humidity = Region::map(&almanac.temperature_to_humidity, &temperature);
+        let location = Region::map(&almanac.humidity_to_location, &humidity);
         location.id
     }).min().unwrap();
 
