@@ -2,4 +2,5 @@
 
 <https://adventofcode.com/2023/>
 
-I want to improve Rust and learn VIM motion
+- improve Rust
+- learn VIM motion

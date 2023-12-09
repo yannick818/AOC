@@ -18,6 +18,21 @@ fn test_gear_ratios() {
     assert_eq!(4361, cal_gear_ratio(input).unwrap());
 }
 
+#[test]
+fn test_gear_ratios2() {
+    let input = "467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..";
+    assert_eq!(467835, cal_gear_ratio2(input).unwrap());
+}
+
 //TODO swapped x and y...
 #[derive(Debug)]
 struct Number {
@@ -61,11 +76,29 @@ impl Number {
     }
 }
 
-struct Symbol{
+#[derive(Debug, Clone, Copy)]
+struct Symbol {
+    symbol: char,
     x: usize,
     y: usize,
 }
 
+impl Symbol {
+    fn cal_ratio(&self, numbers: &[Number], input: &str) -> Option<u32> {
+        let touching_numbers = numbers.iter().filter(|number| {
+            number.touches_symbol(&[*self], input)
+        }).collect::<Vec<_>>();
+        
+        if touching_numbers.len() == 2 {
+            let (first, second) = (touching_numbers[0], touching_numbers[1]);
+            let ratio = first.value * second.value;
+            Some(ratio)
+        } else {
+            None
+        }
+
+    } 
+}
 
 pub fn cal_gear_ratio(input: &str) -> Result<u32> {
     
@@ -77,6 +110,17 @@ pub fn cal_gear_ratio(input: &str) -> Result<u32> {
     .sum();
 
     Ok(sum)
+}
+
+pub fn cal_gear_ratio2(input: &str) -> Result<u32> {
+    let (numbers, symbols) = transform_input(input);
+    let symbols = symbols.into_iter().filter(|symbol| symbol.symbol == '*').collect::<Vec<_>>();
+
+    let ratios = symbols.iter().filter_map(|symbol| {
+        symbol.cal_ratio(&numbers, input)
+    }).sum();
+
+    Ok(ratios)
 }
 
 fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
@@ -106,8 +150,8 @@ fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
                 (digit, true) => {
                     num_buffer.push(digit);
                 },
-                (_symbol, false) => {
-                    symbols.push(Symbol{x, y});
+                (symbol, false) => {
+                    symbols.push(Symbol{symbol, x, y});
                     save_num();
                 },
             }
