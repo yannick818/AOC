@@ -5,6 +5,7 @@ use crate::day::d1_trebuchet::*;
 use crate::day::d2_cube_conundrum::*;
 use crate::day::d3_gear_ratios::*;
 use crate::day::d4_scratchcards::*;
+use crate::day::d5_fertilizer::*;
 
 use crate::prelude::*;
 
@@ -26,6 +27,10 @@ fn main() -> Result<()> {
     let input = read_file("input/4.txt")?;
     println!("Day 4.1: {}",cal_card_points(&input)?);
     println!("Day 4.2: {}", count_cards(&input)?);
+    
+    let input = read_file("input/5.txt")?;
+    println!("Day 5.1: {}", cal_lowest_location(&input)?);
+    // println!("Day 4.2: {}", count_cards(&input)?);
     
     Ok(())
 }
