@@ -48,7 +48,7 @@ fn test_fertilizer2() {
     assert_eq!(46, cal_lowest_loc_ranges(TEST_INPUT).unwrap());
 }
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone, PartialOrd, Ord, Debug)]
+#[derive(Eq, PartialEq, Hash, Copy, Clone, PartialOrd, Ord)]
 struct Id<T> {
     id: u64,
     _phantom: PhantomData<T>,
@@ -60,6 +60,12 @@ impl<T> From<u64> for Id<T> {
             id,
             _phantom: PhantomData,
         }
+    }
+}
+
+impl<T> std::fmt::Debug for Id<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"Id({})", self.id)
     }
 }
 
@@ -80,42 +86,74 @@ struct Humidity;
 #[derive(Eq, PartialEq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Location;
 
+#[derive(Debug, Clone, Copy)]
 struct Region<A, B> {
     dest: u64,
     src: u64, 
     len: u64,
+    counter: u64,
     _phantom: PhantomData<(A, B)>,
 }
 
-impl<A, B> Region<Id<A>, Id<B>> {
+impl<Src, Dest> Region<Id<Src>, Id<Dest>> {
 
     fn new(dest: u64, src: u64, len: u64) -> Self {
         Self {
             dest,
             src,
             len,
+            counter: src,
             _phantom: PhantomData,
         }
     }
 
-    fn contains(&self, id: &Id<A>) -> bool {
+    fn contains_src(&self, id: &Id<Src>) -> bool {
         let range = self.src..(self.src+self.len);
         range.contains(&id.id)
     }
 
-    fn convert(&self, id: &Id<A>) -> Id<B> {
-        let delta = self.dest as i64 - self.src as i64;
-
-        Id::<B>::from((id.id as i64 + delta) as u64)
+    fn contains_dest(&self, id: &Id<Dest>) -> bool {
+        let range = self.dest..(self.dest+self.len);
+        range.contains(&id.id)
     }
 
-    fn map(ranges: &[Self], id: &Id<A>) -> Id<B> {
-        match ranges.iter().find(|r| r.contains(id)) {
-            Some(r) => r.convert(id),
-            None => Id::<B>::from(id.id),
+    fn convert(&self, src: &Id<Src>) -> Id<Dest> {
+        Id::<Dest>::from((src.id as i64 - self.src as i64 + self.dest as i64) as u64)
+    }
+
+    fn reverse_convert(&self, dest: &Id<Dest>) -> Id<Src> {
+        Id::<Src>::from((dest.id as i64 - self.dest as i64 + self.src as i64) as u64)
+    }
+
+    fn map(ranges: &[Self], src: &Id<Src>) -> Id<Dest> {
+        match ranges.iter()
+        .find(|r| r.contains_src(src)) {
+            Some(r) => r.convert(src),
+            None => Id::<Dest>::from(src.id),
+        }
+    }
+    
+    fn reverse_map(ranges: &[Self], dest: &Id<Dest>) -> Id<Src> {
+        match ranges.iter()
+        .find(|r| r.contains_dest(dest)) {
+            Some(r) => r.reverse_convert(dest),
+            None => Id::<Src>::from(dest.id),
         }
     }
 
+}
+impl<A,B> Iterator for Region<Id<A>, Id<B>> {
+    type Item = Id<B>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.counter < self.src + self.len {
+            let id = Id::<B>::from(self.counter);
+            self.counter += 1;
+            Some(id)
+        } else {
+            None
+        }
+    }
 }
 
 type IdMap<A, B> = Vec<Region<Id<A>, Id<B>>>;
@@ -207,7 +245,7 @@ pub fn cal_lowest_location(input: &str) -> Result<u64> {
 }
 
 pub fn cal_lowest_loc_ranges(input: &str) -> Result<u64> {
-    let min = cal_location(input, Almanac::list_seed_ranges);
+    let min = cal_location_reverse(input, Almanac::list_seed_ranges);
     Ok(min)
 }
 
@@ -219,6 +257,7 @@ fn cal_location(input: &str, generator: SeedGenerator) -> u64 {
         (range.start.id..range.end.id).map(|id|{
             Id::<Seed>::from(id)
         }).map(|seed| {
+            println!("seed: {:?}", seed);
             let soil = Region::map(&almanac.seed_to_soil, &seed);
             let fertilizer = Region::map(&almanac.soil_to_fertilizer, &soil);
             let water = Region::map(&almanac.fertilizer_to_water, &fertilizer);
@@ -232,6 +271,31 @@ fn cal_location(input: &str, generator: SeedGenerator) -> u64 {
     min
 }
 
+fn cal_location_reverse(input: &str, generator: SeedGenerator) -> u64 {
+    
+    let almanac = Almanac::new(input, generator);
+    
+    let min_loc = (0..u64::MAX).map(Id::<Location>::from)
+    .find(|loc_id| {
 
+        let humidity = Region::reverse_map(&almanac.humidity_to_location, loc_id);
+        let temperature = Region::reverse_map(&almanac.temperature_to_humidity, &humidity);
+        let light = Region::reverse_map(&almanac.light_to_temperature, &temperature);
+        let water = Region::reverse_map(&almanac.water_to_light, &light);
+        let fertilizer = Region::reverse_map(&almanac.fertilizer_to_water, &water);
+        let soil = Region::reverse_map(&almanac.soil_to_fertilizer, &fertilizer);
+        let seed = Region::reverse_map(&almanac.seed_to_soil, &soil);
+            
+        let contains = almanac.seeds.iter().any(|range| {
+            range.contains(&seed)
+        });
+
+        println!("loc: {:?}, seed: {:?}, contains: {}", loc_id, seed, contains);
+
+        contains
+    }).unwrap();
+
+    min_loc.id
+}
 
 
