@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     
     let input = read_file("input/5.txt")?;
     println!("Day 5.1: {}", cal_lowest_location(&input)?);
-    // println!("Day 4.2: {}", count_cards(&input)?);
+    println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
     
     Ok(())
 }
