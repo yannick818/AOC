@@ -48,7 +48,7 @@ fn test_fertilizer2() {
     assert_eq!(46, cal_lowest_loc_ranges(TEST_INPUT).unwrap());
 }
 
-#[derive(Eq, PartialEq, Hash, Copy, Clone, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Hash, Copy, Clone, PartialOrd, Ord, Debug)]
 struct Id<T> {
     id: u64,
     _phantom: PhantomData<T>,
@@ -63,8 +63,7 @@ impl<T> From<u64> for Id<T> {
     }
 }
 
-
-#[derive(Eq, PartialEq, Hash, Clone, Copy, PartialOrd, Ord)]
+#[derive(Eq, PartialEq, Hash, Clone, Copy, PartialOrd, Ord, Debug)]
 struct Seed;
 #[derive(Eq, PartialEq, Hash, Clone, Copy, PartialOrd, Ord)]
 struct Soil;
@@ -216,6 +215,7 @@ fn cal_location(input: &str, generator: SeedGenerator) -> u64 {
     
     let almanac = Almanac::new(input, generator);
     let min = almanac.seeds.iter().fold(u64::MAX, |min, range| {
+        println!("range: {:?}", range);
         (range.start.id..range.end.id).map(|id|{
             Id::<Seed>::from(id)
         }).map(|seed| {
