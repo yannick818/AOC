@@ -1,4 +1,6 @@
-use std::{marker::PhantomData, ops::Range};
+use std::{marker::PhantomData, ops::Range, time::Instant};
+
+use rayon::prelude::*;
 
 use crate::prelude::*;
 
@@ -234,6 +236,22 @@ impl Almanac {
 
     }
 
+    fn cal_starting_id(&self) -> Id<Location> {
+        //since there is no 0..seeds
+        self.seeds.iter().map(|range| {
+            range.start
+        }).map(|seed| {
+            let soil = Region::map(&self.seed_to_soil, &seed);
+            let fertilizer = Region::map(&self.soil_to_fertilizer, &soil);
+            let water = Region::map(&self.fertilizer_to_water, &fertilizer);
+            let light = Region::map(&self.water_to_light, &water);
+            let temperature = Region::map(&self.light_to_temperature, &light);
+            let humidity = Region::map(&self.temperature_to_humidity, &temperature);
+            Region::map(&self.humidity_to_location, &humidity)
+        }).min().unwrap()
+
+    }
+
 
 }
 
@@ -245,7 +263,10 @@ pub fn cal_lowest_location(input: &str) -> Result<u64> {
 }
 
 pub fn cal_lowest_loc_ranges(input: &str) -> Result<u64> {
+    let start = Instant::now();
     let min = cal_location_reverse(input, Almanac::list_seed_ranges);
+    let end = Instant::now();
+    println!("time: {:?}", end.duration_since(start));
     Ok(min)
 }
 
@@ -253,11 +274,11 @@ fn cal_location(input: &str, generator: SeedGenerator) -> u64 {
     
     let almanac = Almanac::new(input, generator);
     let min = almanac.seeds.iter().fold(u64::MAX, |min, range| {
-        println!("range: {:?}", range);
+        // println!("range: {:?}", range);
         (range.start.id..range.end.id).map(|id|{
             Id::<Seed>::from(id)
         }).map(|seed| {
-            println!("seed: {:?}", seed);
+            // println!("seed: {:?}", seed);
             let soil = Region::map(&almanac.seed_to_soil, &seed);
             let fertilizer = Region::map(&almanac.soil_to_fertilizer, &soil);
             let water = Region::map(&almanac.fertilizer_to_water, &fertilizer);
@@ -275,8 +296,13 @@ fn cal_location_reverse(input: &str, generator: SeedGenerator) -> u64 {
     
     let almanac = Almanac::new(input, generator);
     
-    let min_loc = (0..u64::MAX).map(Id::<Location>::from)
-    .find(|loc_id| {
+    let start = almanac.cal_starting_id();
+    // since the range is accessed randomly, we define a maximum using some start seeds
+    let min_loc = (0..start.id)
+    .into_par_iter()
+    .map(Id::<Location>::from)
+    
+    .find_first(|loc_id| {
 
         let humidity = Region::reverse_map(&almanac.humidity_to_location, loc_id);
         let temperature = Region::reverse_map(&almanac.temperature_to_humidity, &humidity);
@@ -290,7 +316,7 @@ fn cal_location_reverse(input: &str, generator: SeedGenerator) -> u64 {
             range.contains(&seed)
         });
 
-        println!("loc: {:?}, seed: {:?}, contains: {}", loc_id, seed, contains);
+        // println!("loc: {:?}, seed: {:?}, contains: {}", loc_id, seed, contains);
 
         contains
     }).unwrap();

@@ -31,8 +31,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/5.txt")?;
     println!("Day 5.1: {}", cal_lowest_location(&input)?);
-    //FIXME Performance Bug on this one:
-    // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+    println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
 
     Ok(())
 }
