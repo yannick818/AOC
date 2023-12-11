@@ -6,6 +6,7 @@ use crate::day::d2_cube_conundrum::*;
 use crate::day::d3_gear_ratios::*;
 use crate::day::d4_scratchcards::*;
 use crate::day::d5_fertilizer::*;
+use crate::day::d6_wait_for_it::*;
 
 use crate::prelude::*;
 
@@ -31,7 +32,12 @@ fn main() -> Result<()> {
 
     let input = read_file("input/5.txt")?;
     println!("Day 5.1: {}", cal_lowest_location(&input)?);
-    println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+    //is slow...
+    // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+
+    let input = read_file("input/6.txt")?;
+    println!("Day 6.1: {}", cal_ways_to_win(&input)?);
+    // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
 
     Ok(())
 }
