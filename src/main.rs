@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     let input = read_file("input/7.txt")?;
-    println!("Day 7.1: {}", cal_winning_points(&input)?);
+    println!("Day 7.1: {}", cal_winning_points(&input)?); //249863924 to low, 249863924
     // println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     Ok(())

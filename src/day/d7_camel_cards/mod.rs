@@ -21,7 +21,16 @@ pub fn cal_winning_points(input: &str) -> Result<TotalWinnings> {
     let mut games = Hand::parse(input);
     games.sort();
 
-    // println!("{:#?}", games);
+    println!("{:#?}", games);
+
+    //test if a hand is duplicated. nod needed but used for debugging
+    for (index, value) in games.iter().enumerate() {
+        if let Some(next_value) = games.get(index + 1) {
+            if value == next_value {
+                panic!("Duplicate hand: {:#?}", value);
+            }
+        }
+    }
 
     let winnings = games.into_iter()
     .rev()
