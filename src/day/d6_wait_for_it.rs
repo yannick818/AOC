@@ -12,6 +12,11 @@ fn test_way_to_win() {
     assert_eq!(288, cal_ways_to_win(INPUT).unwrap());
 }
 
+#[test]
+fn test_way_to_win2() {
+    assert_eq!(71503, cal_ways_to_win2(INPUT).unwrap());
+}
+
 type Duration = u64;
 type Speed = u64;
 type Distance = u64;
@@ -40,6 +45,18 @@ impl Boat {
 
 pub fn cal_ways_to_win(input: &str) -> Result<u64> {
     let races = parse_races(input);
+    let mult = mult_ways_to_win(&races);    
+    Ok(mult as u64)
+}
+
+pub fn cal_ways_to_win2(input: &str) -> Result<u64> {
+    let races = parse_race(input);
+    let mult = mult_ways_to_win(&[races]);    
+    Ok(mult as u64)
+}
+
+fn mult_ways_to_win(races: &[Race]) -> u64 {
+
     let mult: usize = races.iter()
     .map(|race| {
         (1..race.duration)
@@ -53,8 +70,8 @@ pub fn cal_ways_to_win(input: &str) -> Result<u64> {
         // println!("ways_to_win: {}", ways_to_win);
         // ways_to_win
     }).product();
-    
-    Ok(mult as u64)
+
+    mult as u64
 }
 
 fn parse_races(input: &str) -> Vec<Race> {
@@ -80,4 +97,17 @@ fn parse_races(input: &str) -> Vec<Race> {
         Race { duration, distance}
     }).collect()
     
+}
+
+fn parse_race(input: &str) -> Race {
+
+    let mut lines = input.lines();
+    let duration = lines.next().unwrap()
+    .split_once("Time: ").unwrap().1.replace(' ', "")
+    .parse::<Duration>().unwrap();
+    let distance = lines.next().unwrap()
+    .split_once("Distance: ").unwrap().1.replace(' ', "")
+    .parse::<Distance>().unwrap();
+
+    Race { duration, distance }
 }

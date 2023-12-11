@@ -37,7 +37,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/6.txt")?;
     println!("Day 6.1: {}", cal_ways_to_win(&input)?);
-    // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+    println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     Ok(())
 }
