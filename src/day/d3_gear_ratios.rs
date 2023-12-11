@@ -157,6 +157,7 @@ fn transform_input(input: &str) -> (Vec<Number>, Vec<Symbol>) {
             }
         });
 
+        // thanks: https://www.reddit.com/r/adventofcode/comments/18dme4t/2023_day_3_part_1rust_need_help/
         if !num_buffer.is_empty() {
             let value = num_buffer.parse::<u32>().unwrap();
             let len = num_buffer.len();
