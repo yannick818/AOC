@@ -7,6 +7,7 @@ use crate::day::d3_gear_ratios::*;
 use crate::day::d4_scratchcards::*;
 use crate::day::d5_fertilizer::*;
 use crate::day::d6_wait_for_it::*;
+use crate::day::d7_camel_cards::*;
 
 use crate::prelude::*;
 
@@ -38,6 +39,10 @@ fn main() -> Result<()> {
     let input = read_file("input/6.txt")?;
     println!("Day 6.1: {}", cal_ways_to_win(&input)?);
     println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
+
+    let input = read_file("input/7.txt")?;
+    println!("Day 7.1: {}", cal_winning_points(&input)?);
+    // println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     Ok(())
 }
