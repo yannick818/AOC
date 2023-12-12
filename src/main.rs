@@ -8,6 +8,7 @@ use crate::day::d4_scratchcards::*;
 use crate::day::d5_fertilizer::*;
 use crate::day::d6_wait_for_it::*;
 use crate::day::d7_camel_cards::*;
+use crate::day::d8_haunted_wasteland::*;
 
 use crate::prelude::*;
 
@@ -43,6 +44,10 @@ fn main() -> Result<()> {
     let input = read_file("input/7.txt")?;
     println!("Day 7.1: {}", cal_winning_points(&input, false)?); 
     println!("Day 7.2: {}", cal_winning_points(&input, true)?); 
+
+    let input = read_file("input/8.txt")?;
+    println!("Day 8.1: {}", cal_steps(&input)?); //1084 to low
+    // println!("Day 8.2: {}", cal_winning_points(&input, true)?); 
 
     Ok(())
 }
