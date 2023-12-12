@@ -294,9 +294,9 @@ fn cal_location_reverse(input: &str, generator: SeedGenerator) -> u64 {
     
     let almanac = Almanac::new(input, generator);
     
-    let start = almanac.cal_starting_id();
+    let end = almanac.cal_starting_id();
     // since the range is accessed randomly, we define a maximum using some start seeds
-    let min_loc = (0..start.id)
+    let min_loc = (0..end.id)
     .into_par_iter()
     .map(Id::<Location>::from)
     

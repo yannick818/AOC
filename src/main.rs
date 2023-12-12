@@ -1,14 +1,7 @@
 mod day;
 mod prelude;
 
-use crate::day::d1_trebuchet::*;
-use crate::day::d2_cube_conundrum::*;
-use crate::day::d3_gear_ratios::*;
-use crate::day::d4_scratchcards::*;
-use crate::day::d5_fertilizer::*;
-use crate::day::d6_wait_for_it::*;
-use crate::day::d7_camel_cards::*;
-use crate::day::d8_haunted_wasteland::*;
+use crate::day::*;
 
 use crate::prelude::*;
 
@@ -19,41 +12,45 @@ use std::{fs::File, io::Read};
 fn main() -> Result<()> {
 
     let input = read_file("input/1.txt")?;
-    println!("Day 1.1: {}", cal_trebuchet(&input)?);
-    println!("Day 1.2: {}", cal_trebuchet_str(&input)?);
+    println!("Day 1.1: {}", d1_trebuchet::cal_trebuchet(&input)?);
+    println!("Day 1.2: {}", d1_trebuchet::cal_trebuchet_str(&input)?);
 
     let input = read_file("input/2.txt")?;
-    println!("Day 2.1: {}", cal_cubes(&input)?);
-    println!("Day 2.2: {}", cal_cubes2(&input)?);
+    println!("Day 2.1: {}", d2_cube_conundrum::cal_cubes(&input)?);
+    println!("Day 2.2: {}", d2_cube_conundrum::cal_cubes2(&input)?);
 
     let input = read_file("input/3.txt")?;
-    println!("Day 3.1: {}", cal_gear_ratio(&input)?);
-    println!("Day 3.2: {}", cal_gear_ratio2(&input)?);
+    println!("Day 3.1: {}", d3_gear_ratios::cal_gear_ratio(&input)?);
+    println!("Day 3.2: {}", d3_gear_ratios::cal_gear_ratio2(&input)?);
 
     let input = read_file("input/4.txt")?;
-    println!("Day 4.1: {}", cal_card_points(&input)?);
-    println!("Day 4.2: {}", count_cards(&input)?);
+    println!("Day 4.1: {}", d4_scratchcards::cal_card_points(&input)?);
+    println!("Day 4.2: {}", d4_scratchcards::count_cards(&input)?);
 
     let input = read_file("input/5.txt")?;
-    println!("Day 5.1: {}", cal_lowest_location(&input)?);
+    println!("Day 5.1: {}", d5_fertilizer::cal_lowest_location(&input)?);
     //30s with par_iter, 115s without 
     // let start = Instant::now();
-    // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+    // println!("Day 5.2: {}", d5_fertiliter::cal_lowest_loc_ranges(&input)?);
     // let end = Instant::now();
     // println!("time: {:?}", end.duration_since(start));
 
     let input = read_file("input/6.txt")?;
-    println!("Day 6.1: {}", cal_ways_to_win(&input)?);
-    println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
+    println!("Day 6.1: {}", d6_wait_for_it::cal_ways_to_win(&input)?);
+    println!("Day 6.2: {}", d6_wait_for_it::cal_ways_to_win2(&input)?);
 
 
     let input = read_file("input/7.txt")?;
-    println!("Day 7.1: {}", cal_winning_points(&input, false)?); 
-    println!("Day 7.2: {}", cal_winning_points(&input, true)?); 
+    println!("Day 7.1: {}", d7_camel_cards::cal_winning_points(&input, false)?); 
+    println!("Day 7.2: {}", d7_camel_cards::cal_winning_points(&input, true)?); 
 
     let input = read_file("input/8.txt")?;
-    println!("Day 8.1: {}", cal_steps(&input)?); 
-    println!("Day 8.2: {}", cal_steps_simultanious(&input)?); 
+    println!("Day 8.1: {}", d8_haunted_wasteland::cal_steps(&input)?); 
+    println!("Day 8.2: {}", d8_haunted_wasteland::cal_steps_simultanious(&input)?); 
+
+    let input = read_file("input/9.txt")?;
+    println!("Day 9.1: {}", d9_mirage_maintenance::cal_next_steps(&input)?); 
+    // println!("Day 9.2: {}", cal_steps_simultanious(&input)?); 
 
     Ok(())
 }
