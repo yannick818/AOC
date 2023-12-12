@@ -1,4 +1,6 @@
 
+use std::collections::VecDeque;
+
 use crate::prelude::*;
 
 #[allow(dead_code)]
@@ -11,10 +13,15 @@ fn test_next_steps() {
     assert_eq!(114, cal_next_steps(INPUT).unwrap());
 }
 
+#[test]
+fn test_prev_steps() {
+    assert_eq!(2, cal_prev_steps(INPUT).unwrap());
+}
+
 type Value = i64;
 
 #[derive(Debug, Clone)]
-struct Row(Vec<Value>);
+struct Row(VecDeque<Value>);
 
 struct History {
     history: Vec<Row>,
@@ -32,24 +39,43 @@ impl History {
     }
 
     fn predict_next(&mut self) -> Value {
-        let last = self.history.last_mut().unwrap();
-        last.0.push(0);
+        let zeros = self.history.last_mut().unwrap();
+        zeros.0.push_back(0);
 
         self.history.iter_mut()
         .rev()
         .skip(1)
         .fold(0_i64, |step, row| {
-           let last = row.0.last().unwrap();
+           let last = row.0.back().unwrap();
            let new = last + step;
-            row.0.push(new); 
+            row.0.push_back(new); 
             new
         })
+    }
 
+    fn predict_prev(&mut self) -> Value {
+        let zeros = self.history.last_mut().unwrap();
+        zeros.0.push_back(0);
+
+        self.history.iter_mut()
+        .rev()
+        .skip(1)
+        .fold(0_i64, |step, row| {
+           let first = row.0.front().unwrap();
+           let new = first - step;
+            row.0.push_front(new); 
+            new
+        })
     }
 
     fn get_last(&self) -> Value {
         let first_row = self.history.first().unwrap();
-        *first_row.0.last().unwrap()
+        *first_row.0.back().unwrap()
+    }
+
+    fn get_first(&self) -> Value {
+        let first_row = self.history.first().unwrap();
+        *first_row.0.front().unwrap()
     }
 }
 impl Row {
@@ -57,8 +83,8 @@ impl Row {
     fn cal_next(&self) -> Row {
         self.0.iter()
         .zip(self.0.iter().skip(1))
-        .fold(Row(vec![]), |mut row, (v1, v2)| {
-            row.0.push(v2 - v1);
+        .fold(Row(VecDeque::new()), |mut row, (v1, v2)| {
+            row.0.push_back(v2 - v1);
             row
         })
     }
@@ -75,12 +101,16 @@ impl From<&str> for Row {
     }
 }
 
-pub fn cal_next_steps(input: &str) -> Result<Value> {
-    let mut histories = input.lines().map(|line| {
+fn parse_history(input: &str) -> Vec<History> {
+    input.lines().map(|line| {
         let element = Row::from(line);
         History::new(element)
     })
-    .collect::<Vec<_>>();
+    .collect()
+}
+
+pub fn cal_next_steps(input: &str) -> Result<Value> {
+    let mut histories = parse_history(input);
 
     histories.iter_mut().for_each(|history| {
         history.predict_next();
@@ -93,3 +123,16 @@ pub fn cal_next_steps(input: &str) -> Result<Value> {
     Ok(sum)
 }
 
+pub fn cal_prev_steps(input: &str) -> Result<Value> {
+    let mut histories = parse_history(input);
+
+    histories.iter_mut().for_each(|history| {
+        history.predict_prev();
+    });
+
+    let sum = histories.iter().map(|history| {
+        history.get_first()
+    }).sum::<Value>();
+
+    Ok(sum)
+}

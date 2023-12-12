@@ -50,7 +50,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/9.txt")?;
     println!("Day 9.1: {}", d9_mirage_maintenance::cal_next_steps(&input)?); 
-    // println!("Day 9.2: {}", cal_steps_simultanious(&input)?); 
+    println!("Day 9.2: {}", d9_mirage_maintenance::cal_prev_steps(&input)?); 
 
     Ok(())
 }
