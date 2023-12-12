@@ -12,6 +12,7 @@ use crate::day::d8_haunted_wasteland::*;
 
 use crate::prelude::*;
 
+#[allow(unused_imports)]
 use std::time::Instant;
 use std::{fs::File, io::Read};
 
@@ -52,10 +53,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/8.txt")?;
     println!("Day 8.1: {}", cal_steps(&input)?); 
-    let start = Instant::now();
     println!("Day 8.2: {}", cal_steps_simultanious(&input)?); 
-    let end = Instant::now();
-    println!("time: {:?}", end.duration_since(start));
 
     Ok(())
 }

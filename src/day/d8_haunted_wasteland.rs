@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
 use crate::prelude::*;
-use rayon::prelude::*;
+
+use num::integer::lcm;
 
 #[test]
 fn test_steps() {
@@ -121,30 +122,44 @@ pub fn cal_steps(input: &str) -> Result<u64> {
     Ok(needed_steps.unwrap() as u64)
 }
 
-pub fn cal_steps_simultanious(input: &str) -> Result<u64> {
-    let (instructions, networks) = parse_network(input);
+fn cal_steps_needed(instructions: &[Instruction], networks: &HashMap<Node, Network>, start: Node) -> u64 {
+    let mut node = start;
 
-    let mut nodes = networks.keys()
-    .filter(|node| node.is_start())
-    .copied()
-    .collect::<Vec<_>>();
-    
-    let needed_steps = instructions.into_iter()
+    instructions.iter()
     .cycle()
     .enumerate()
     .find_map(|(step, instruction)| {
-        nodes.iter_mut().for_each(|node| {
-            *node = networks.get(node).unwrap().next(instruction);
-        });
+        node = networks.get(&node).unwrap().next(*instruction);
+        // if node.is_destination() {
+        //     println!("end node {:?} step {}", node.0, step+1);
+        // };
+        node.is_destination().then_some(step+1)
+        // let endless: Option<usize> = None; 
+        // endless
+    }).unwrap() as u64
+}
 
-        let last = nodes.iter().map(|node| node.0[2]).collect::<Vec<_>>();
-        println!("lasts: {:?}", last);
+pub fn cal_steps_simultanious(input: &str) -> Result<u64> {
+    let (instructions, networks) = parse_network(input);
 
-        let all_done = nodes.iter().all(|node| node.is_destination());
-        all_done.then_some(step+1)
+    let nodes = networks.keys()
+    .filter(|node| node.is_start())
+    .copied()
+    .collect::<Vec<_>>();
+
+    // println!("start: {:#?}", nodes);
+
+    let steps_to_finish = nodes.iter().map(|start| {
+        cal_steps_needed(&instructions, &networks, *start)
+    }).collect::<Vec<_>>();
+
+    // println!("steps needed: {:?}", steps_to_finish);
+    let lcm = steps_to_finish.iter().fold(steps_to_finish[0], |acc, &x| {
+        lcm(acc, x)
     });
-
-    Ok(needed_steps.unwrap() as u64)
+    // println!("lcm: {:?}", lcm);
+    
+    Ok(lcm)
 }
 
 fn parse_network(input: &str) -> (Vec<Instruction>, HashMap<Node, Network>) {
