@@ -12,6 +12,7 @@ use crate::day::d8_haunted_wasteland::*;
 
 use crate::prelude::*;
 
+use std::time::Instant;
 use std::{fs::File, io::Read};
 
 fn main() -> Result<()> {
@@ -34,12 +35,16 @@ fn main() -> Result<()> {
 
     let input = read_file("input/5.txt")?;
     println!("Day 5.1: {}", cal_lowest_location(&input)?);
-    //is slow...
+    //30s with par_iter, 115s without 
+    // let start = Instant::now();
     // println!("Day 5.2: {}", cal_lowest_loc_ranges(&input)?);
+    // let end = Instant::now();
+    // println!("time: {:?}", end.duration_since(start));
 
     let input = read_file("input/6.txt")?;
     println!("Day 6.1: {}", cal_ways_to_win(&input)?);
     println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
+
 
     let input = read_file("input/7.txt")?;
     println!("Day 7.1: {}", cal_winning_points(&input, false)?); 
@@ -47,7 +52,10 @@ fn main() -> Result<()> {
 
     let input = read_file("input/8.txt")?;
     println!("Day 8.1: {}", cal_steps(&input)?); 
-    // println!("Day 8.2: {}", cal_winning_points(&input, true)?); 
+    let start = Instant::now();
+    println!("Day 8.2: {}", cal_steps_simultanious(&input)?); 
+    let end = Instant::now();
+    println!("time: {:?}", end.duration_since(start));
 
     Ok(())
 }

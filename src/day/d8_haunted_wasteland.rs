@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::prelude::*;
+use rayon::prelude::*;
 
 #[test]
 fn test_steps() {
@@ -28,6 +29,22 @@ ZZZ = (ZZZ, ZZZ)";
     assert_eq!(6, cal_steps(input).unwrap());
 }
 
+#[test]
+fn test_simultanious() {
+    let input = "LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)";
+
+    assert_eq!(6, cal_steps_simultanious(input).unwrap());
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Node([char; 3]);
 
@@ -37,10 +54,19 @@ impl Node {
         const START: [char; 3] = ['A', 'A', 'A'];
         Self(START)
     }
-    fn is_destination(&self) -> bool {
+
+    fn is_zzz(&self) -> bool {
         const DESTINATION: [char; 3] = ['Z', 'Z', 'Z'];
         self.0 == DESTINATION
     } 
+
+    fn is_destination(&self) -> bool {
+        self.0[2] == 'Z'
+    }
+
+    fn is_start(&self) -> bool {
+        self.0[2] == 'A'
+    }
 }
 
 impl From<&str> for Node {
@@ -89,7 +115,33 @@ pub fn cal_steps(input: &str) -> Result<u64> {
     .enumerate()
     .find_map(|(step, instruction)| {
         node = networks.get(&node).unwrap().next(instruction);
-        node.is_destination().then_some(step+1)
+        node.is_zzz().then_some(step+1)
+    });
+
+    Ok(needed_steps.unwrap() as u64)
+}
+
+pub fn cal_steps_simultanious(input: &str) -> Result<u64> {
+    let (instructions, networks) = parse_network(input);
+
+    let mut nodes = networks.keys()
+    .filter(|node| node.is_start())
+    .copied()
+    .collect::<Vec<_>>();
+    
+    let needed_steps = instructions.into_iter()
+    .cycle()
+    .enumerate()
+    .find_map(|(step, instruction)| {
+        nodes.iter_mut().for_each(|node| {
+            *node = networks.get(node).unwrap().next(instruction);
+        });
+
+        let last = nodes.iter().map(|node| node.0[2]).collect::<Vec<_>>();
+        println!("lasts: {:?}", last);
+
+        let all_done = nodes.iter().all(|node| node.is_destination());
+        all_done.then_some(step+1)
     });
 
     Ok(needed_steps.unwrap() as u64)

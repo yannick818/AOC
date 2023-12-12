@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Range, time::Instant};
+use std::{marker::PhantomData, ops::Range};
 
 use rayon::prelude::*;
 
@@ -262,11 +262,9 @@ pub fn cal_lowest_location(input: &str) -> Result<u64> {
     Ok(min)
 }
 
+#[allow(dead_code)] //is slow and may be commented out
 pub fn cal_lowest_loc_ranges(input: &str) -> Result<u64> {
-    let start = Instant::now();
     let min = cal_location_reverse(input, Almanac::list_seed_ranges);
-    let end = Instant::now();
-    println!("time: {:?}", end.duration_since(start));
     Ok(min)
 }
 
