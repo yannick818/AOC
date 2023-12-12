@@ -32,6 +32,11 @@ ZZZ = (ZZZ, ZZZ)";
 struct Node([char; 3]);
 
 impl Node {
+
+    fn start() -> Self {
+        const START: [char; 3] = ['A', 'A', 'A'];
+        Self(START)
+    }
     fn is_destination(&self) -> bool {
         const DESTINATION: [char; 3] = ['Z', 'Z', 'Z'];
         self.0 == DESTINATION
@@ -76,8 +81,8 @@ impl From<char> for Instruction {
 }
 
 pub fn cal_steps(input: &str) -> Result<u64> {
-    let (instructions, start, networks) = parse_network(input);
-    let mut node = start;
+    let (instructions, networks) = parse_network(input);
+    let mut node = Node::start();
 
     let needed_steps = instructions.into_iter()
     .cycle()
@@ -90,7 +95,7 @@ pub fn cal_steps(input: &str) -> Result<u64> {
     Ok(needed_steps.unwrap() as u64)
 }
 
-fn parse_network(input: &str) -> (Vec<Instruction>, Node, HashMap<Node, Network>) {
+fn parse_network(input: &str) -> (Vec<Instruction>, HashMap<Node, Network>) {
     let (instructions, networks) = input.split_once("\n\n").unwrap();    
     let instructions = instructions.chars().map(Instruction::from).collect::<Vec<_>>();
 
@@ -104,11 +109,9 @@ fn parse_network(input: &str) -> (Vec<Instruction>, Node, HashMap<Node, Network>
         let right = Node::from(right);
         (src, Network { left, right })
     });
-    
-    let first = networks.clone().next().unwrap().0;
 
     let networks = networks.collect::<HashMap<_, _>>();
 
-    (instructions, first, networks)
+    (instructions, networks)
 }
 

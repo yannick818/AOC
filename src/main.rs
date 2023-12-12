@@ -46,7 +46,7 @@ fn main() -> Result<()> {
     println!("Day 7.2: {}", cal_winning_points(&input, true)?); 
 
     let input = read_file("input/8.txt")?;
-    println!("Day 8.1: {}", cal_steps(&input)?); //1084 to low
+    println!("Day 8.1: {}", cal_steps(&input)?); 
     // println!("Day 8.2: {}", cal_winning_points(&input, true)?); 
 
     Ok(())
