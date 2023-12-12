@@ -41,7 +41,7 @@ fn main() -> Result<()> {
     println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     let input = read_file("input/7.txt")?;
-    println!("Day 7.1: {}", cal_winning_points(&input)?);
+    println!("Day 7.1: {}", cal_winning_points(&input)?); 
     // println!("Day 6.2: {}", cal_ways_to_win2(&input)?);
 
     Ok(())
@@ -52,5 +52,20 @@ fn read_file(path: &str) -> Result<String> {
     let mut buffer = String::new();
     file.read_to_string(&mut buffer)?;
     Ok(buffer)
+}
+
+#[test]
+fn test_website() {
+    let path = "https://adventofcode.com/2023/day/3/input";
+    let input = read_website(path).unwrap();
+    // rogin needed...
+    println!("{}", input);
+}
+
+#[allow(dead_code)]
+fn read_website(url: &str) -> Result<String> {
+    let response = reqwest::blocking::get(url)?;
+    let input = response.text()?;
+    Ok(input)
 }
 
