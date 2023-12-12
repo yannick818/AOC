@@ -15,13 +15,21 @@ fn test_cal_winning_points() {
     assert_eq!(6440, cal_winning_points(INPUT).unwrap());
 }
 
+#[test]
+fn test_order() {
+    //winnner is 33332 because 3 > 2
+    let input = "33332 1
+2AAAA 2";
+    assert_eq!(2+2, cal_winning_points(input).unwrap());
+}
+
 type TotalWinnings = u64;
 
 pub fn cal_winning_points(input: &str) -> Result<TotalWinnings> {
     let mut games = Hand::parse(input);
     games.sort();
 
-    println!("{:#?}", games);
+    // println!("{:#?}", games);
 
     //test if a hand is duplicated. nod needed but used for debugging
     for (index, value) in games.iter().enumerate() {
