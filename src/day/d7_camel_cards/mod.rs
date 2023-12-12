@@ -11,8 +11,8 @@ KTJJT 220
 QQQJA 483";
 
 #[test]
-fn test_cal_winning_points() {
-    assert_eq!(6440, cal_winning_points(INPUT).unwrap());
+fn test_winning_points() {
+    assert_eq!(6440, cal_winning_points(INPUT, false).unwrap());
 }
 
 #[test]
@@ -20,13 +20,18 @@ fn test_order() {
     //winnner is 33332 because 3 > 2
     let input = "33332 1
 2AAAA 2";
-    assert_eq!(2+2, cal_winning_points(input).unwrap());
+    assert_eq!(2+2, cal_winning_points(input, false).unwrap());
+}
+
+#[test]
+fn test_winning_points_joker() {
+    assert_eq!(5905, cal_winning_points(INPUT, true).unwrap());
 }
 
 type TotalWinnings = u64;
 
-pub fn cal_winning_points(input: &str) -> Result<TotalWinnings> {
-    let mut games = Hand::parse(input);
+pub fn cal_winning_points(input: &str, use_joker: bool) -> Result<TotalWinnings> {
+    let mut games = Hand::parse(input, use_joker);
     games.sort();
 
     // println!("{:#?}", games);
