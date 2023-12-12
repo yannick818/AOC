@@ -54,3 +54,18 @@ fn read_file(path: &str) -> Result<String> {
     Ok(buffer)
 }
 
+#[test]
+fn test_website() {
+    let path = "https://adventofcode.com/2023/day/3/input";
+    let input = read_website(path).unwrap();
+    // rogin needed...
+    println!("{}", input);
+}
+
+#[allow(dead_code)]
+fn read_website(url: &str) -> Result<String> {
+    let response = reqwest::blocking::get(url)?;
+    let input = response.text()?;
+    Ok(input)
+}
+

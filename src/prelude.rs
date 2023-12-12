@@ -11,7 +11,10 @@ pub enum AocError {
     IO(#[from] std::io::Error),
 
     #[error("Parse Error: {0}")]
-    Parse(#[from] std::num::ParseIntError)
+    Parse(#[from] std::num::ParseIntError),
+
+    #[error("Request Error: {0}")]
+    Request(#[from] reqwest::Error),
 }
 
 impl std::convert::From<&str> for AocError {
