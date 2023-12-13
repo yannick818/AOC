@@ -29,7 +29,7 @@ impl Iterator for MazeRunner<'_> {
         self.started = true;
 
         let new_step = self.pos.walk(&self.walking_dir).map(|(new_dir, new_pos)| {
-            let new_tile = self.maze.maze.get(&new_pos);
+            let new_tile = self.maze.get_tile(&new_pos);
             (new_tile, new_dir)
         });
 

@@ -6,16 +6,31 @@ use std::collections::HashMap;
 use enum_iterator::Sequence;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub struct Position(i64, i64);
+pub struct Position {
+    row: i64,
+    col: i64,
+}
 
 impl Position {
     fn walk(&self, dir: &Direction) -> Position {
         // upmost left is (0,0)
         match dir {
-            Direction::North => Position(self.0, self.1 - 1),
-            Direction::South => Position(self.0, self.1 + 1),
-            Direction::East => Position(self.0 + 1, self.1),
-            Direction::West => Position(self.0 - 1, self.1),
+            Direction::North => Self {
+                row: self.row,
+                col: self.col - 1,
+            },
+            Direction::South => Self {
+                row: self.row,
+                col: self.col + 1,
+            },
+            Direction::East => Self {
+                row: self.row + 1,
+                col: self.col,
+            },
+            Direction::West => Self {
+                row: self.row - 1,
+                col: self.col,
+            },
         }
     }
 }
@@ -92,7 +107,8 @@ impl Tile {
 }
 
 pub struct Maze {
-    pub maze: HashMap<Position, Tile>,
+    /// Col(Row(Tile)))
+    maze: Vec<Vec<Tile>>,
     pub start: Tile,
 }
 
@@ -100,42 +116,54 @@ impl Maze {
     pub fn cleanup(&mut self, main_pipe: &HashMap<Position, Tile>) {
         self.maze
             .iter_mut()
-            .filter_map(|(pos, tile)| {
-                if main_pipe.contains_key(pos) {
-                    None
-                } else {
-                    Some(tile)
-                }
-            })
+            .flatten()
+            .filter(|tile| !main_pipe.contains_key(&tile.pos))
             .for_each(|tile| {
                 tile.typ = TileType::Ground;
             });
+    }
+
+    pub fn get_tile(&self, pos: &Position) -> Option<&Tile> {
+        self.maze
+            .get(pos.col as usize)
+            .and_then(|row| row.get(pos.row as usize))
     }
 }
 
 impl From<&str> for Maze {
     fn from(value: &str) -> Self {
-        let (maze, start) = value
-            .lines()
-            .enumerate()
-            .flat_map(|(y, line)| {
-                line.chars().enumerate().map(move |(x, tile)| Tile {
-                    typ: tile.into(),
-                    pos: Position(x as i64, y as i64),
-                })
-            })
-            .fold((HashMap::new(), None), |(mut map, start), tile| {
-                map.insert(tile.pos, tile);
-                let start = if tile.typ == TileType::Start {
-                    if start.is_some() {
-                        panic!("Multiple start tiles");
-                    }
-                    Some(tile)
-                } else {
-                    start
-                };
-                (map, start)
-            });
+        let (maze, start) =
+            value
+                .lines()
+                .enumerate()
+                .fold((Vec::new(), None), |(mut col, start), (y, line)| {
+                    let (row, start) = line.chars().enumerate().fold(
+                        (Vec::new(), start),
+                        move |(mut row, start), (x, tile)| {
+                            let tile = Tile {
+                                typ: tile.into(),
+                                pos: Position {
+                                    row: x as i64,
+                                    col: y as i64,
+                                },
+                            };
+                            row.push(tile);
+
+                            let start = if tile.typ == TileType::Start {
+                                if start.is_some() {
+                                    panic!("Multiple start tiles");
+                                }
+                                Some(tile)
+                            } else {
+                                start
+                            };
+
+                            (row, start)
+                        },
+                    );
+                    col.push(row);
+                    (col, start)
+                });
 
         Self {
             maze,
