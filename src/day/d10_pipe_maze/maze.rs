@@ -1,33 +1,12 @@
+use crate::prelude::*;
+
 use core::panic;
-use std::{collections::HashMap, rc::Rc};
+use std::collections::HashMap;
 
 use enum_iterator::Sequence;
 
-use crate::prelude::*;
-
-#[allow(dead_code)]
-#[test]
-fn test_maze_distance() {
-    let input = "-L|F7
-7S-7|
-L|7||
--L-J|
-L|-JF";
-    assert_eq!(4, cal_maze_distance(input).unwrap());
-}
-
-#[test]
-fn test_maze_distance2() {
-    let input = "7-F7-
-.FJ|7
-SJLL7
-|F--J
-LJ.LJ";
-    assert_eq!(8, cal_maze_distance(input).unwrap());
-}
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-struct Position(i64, i64);
+pub struct Position(i64, i64);
 
 impl Position {
     fn walk(&self, dir: &Direction) -> Position {
@@ -41,7 +20,7 @@ impl Position {
     }
 }
 #[derive(Debug, Clone, Copy, Sequence)]
-enum Direction {
+pub enum Direction {
     North,
     South,
     East,
@@ -49,7 +28,7 @@ enum Direction {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-enum TileType {
+pub enum TileType {
     Vertical,
     Horizontal,
     NorthEast,
@@ -99,69 +78,38 @@ impl From<char> for TileType {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Tile {
-    typ: TileType,
-    pos: Position,
+pub struct Tile {
+    pub typ: TileType,
+    pub pos: Position,
 }
 
 impl Tile {
-    fn walk(&self, from: &Direction) -> Result<(Direction, Position)> {
-        let direction = self.typ.walk(from)?;
+    pub fn walk(&self, walking_dir: &Direction) -> Result<(Direction, Position)> {
+        let direction = self.typ.walk(walking_dir)?;
         let pos = self.pos.walk(&direction);
         Ok((direction, pos))
     }
 }
 
-struct Maze {
-    maze: HashMap<Position, Tile>,
-    start: Tile,
+pub struct Maze {
+    pub maze: HashMap<Position, Tile>,
+    pub start: Tile,
 }
 
-struct MazeRunner {
-    maze: Rc<Maze>,
-    pos: Tile,
-    walking_dir: Direction,
-    started: bool,
-}
-
-impl MazeRunner {
-    fn new(maze: Rc<Maze>, start: Tile, direction: Direction) -> Self {
-        Self {
-            maze,
-            pos: start,
-            walking_dir: direction,
-            started: false,
-        }
-    }
-}
-
-impl Iterator for MazeRunner {
-    type Item = (Tile, Direction);
-
-    fn next(&mut self) -> Option<(Tile, Direction)> {
-        println!("pos: {:?} ({:?})", self.pos, self.walking_dir);
-
-        if self.started && self.pos.typ == TileType::Start {
-            return None;
-        }
-        self.started = true;
-
-        let new_step = self.pos.walk(&self.walking_dir).map(|(new_dir, new_pos)| {
-            let new_tile = self.maze.maze.get(&new_pos);
-            (new_tile, new_dir)
-        });
-
-        match new_step {
-            Ok((Some(new_tile), new_dir)) => {
-                self.pos = *new_tile;
-                self.walking_dir = new_dir;
-                Some((*new_tile, new_dir))
-            }
-            //walked out of maze
-            Ok((None, _)) => None,
-            //hit obstacle
-            Err(_) => None,
-        }
+impl Maze {
+    pub fn cleanup(&mut self, main_pipe: &HashMap<Position, Tile>) {
+        self.maze
+            .iter_mut()
+            .filter_map(|(pos, tile)| {
+                if main_pipe.contains_key(pos) {
+                    None
+                } else {
+                    Some(tile)
+                }
+            })
+            .for_each(|tile| {
+                tile.typ = TileType::Ground;
+            });
     }
 }
 
@@ -194,22 +142,4 @@ impl From<&str> for Maze {
             start: start.unwrap(),
         }
     }
-}
-
-pub fn cal_maze_distance(input: &str) -> Result<usize> {
-    let maze = Rc::new(Maze::from(input));
-    let runner =
-        enum_iterator::all::<Direction>().map(|dir| MazeRunner::new(maze.clone(), maze.start, dir));
-
-    let len = runner
-        .filter_map(|runner| {
-            match runner.enumerate().last() {
-                Some((iteration, (last, _dir))) if last.typ == TileType::Start => Some(iteration+1),
-                _ => None,
-            }
-        })
-        .min()
-        .unwrap();
-
-    Ok(len / 2)
 }
