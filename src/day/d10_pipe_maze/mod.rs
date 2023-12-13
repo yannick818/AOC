@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use crate::prelude::*;
-mod runner;
 mod maze;
+mod runner;
 
 use maze::*;
 use runner::*;
@@ -75,32 +75,36 @@ L7JLJL-JLJLJL--JLJ.L";
     assert_eq!(10, cal_enclosed_tiles(input).unwrap());
 }
 
+fn get_main_pipe(maze: &mut Maze) -> HashMap<Position, Tile> {
+    for dir in enum_iterator::all::<Direction>() {
+        let runner = MazeRunner::new(maze, maze.start, dir);
+        let (path, is_finished) = runner
+            .fold((HashMap::new(), false), |(mut map, _), (tile, _)| {
+                map.insert(tile.pos, tile);
+                let finished = tile.typ.is_start();
 
-fn get_main_pipe(maze: &Maze) -> HashMap<Position, Tile> {
-    let runner =
-        enum_iterator::all::<Direction>().map(|dir| MazeRunner::new(maze.clone(), maze.start, dir));
+                (map, finished)
+            });
 
-    runner
-        .map(|runner| {
-            runner
-                .map(|(tile, _dir)| (tile.pos, tile))
-                .collect::<HashMap<_, _>>()
-        })
-        .max_by(|a, b| a.len().cmp(&b.len()))
-        .unwrap()
+        if is_finished {
+            return path;
+        }
+    }
+    panic!("No main pipe found");
 }
 
 pub fn cal_maze_distance(input: &str) -> Result<usize> {
-    let maze = Maze::from(input);
-
-    let len = get_main_pipe(&maze).len();
+    let mut maze = Maze::from(input);
+    let len = get_main_pipe(&mut maze).len();
+    println!("{:#?}", maze);
     Ok(len / 2)
 }
 
 pub fn cal_enclosed_tiles(input: &str) -> Result<usize> {
     let mut maze = Maze::from(input);
-    let main_pipe = get_main_pipe(&maze);
+    let main_pipe = get_main_pipe(&mut maze);
     maze.cleanup(&main_pipe);
-
-    todo!()
+    println!("{:#?}", maze);
+    let inner_tiles = maze.define_ground();
+    Ok(inner_tiles)
 }

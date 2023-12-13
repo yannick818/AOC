@@ -70,7 +70,7 @@ fn read_file(path: &str) -> Result<String> {
 fn test_website() {
     let path = "https://adventofcode.com/2023/day/3/input";
     let input = read_website(path).unwrap();
-    // rogin needed...
+    // login needed...
     println!("{}", input);
 }
 

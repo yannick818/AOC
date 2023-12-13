@@ -1,14 +1,14 @@
 use crate::prelude::*;
 
 use core::panic;
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use enum_iterator::Sequence;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub struct Position {
-    row: i64,
-    col: i64,
+    pub row: i64,
+    pub col: i64,
 }
 
 impl Position {
@@ -43,50 +43,93 @@ pub enum Direction {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum TileType {
+pub enum Location {
+    Inner,
+    Outter,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum Pipe {
     Vertical,
     Horizontal,
     NorthEast,
     NorthWest,
     SouthEast,
     SouthWest,
-    Ground,
-    Start,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum TileType {
+    Pipe(Pipe),
+    Ground(Option<Location>),
+    Start(Option<Pipe>),
 }
 
 impl TileType {
     fn walk(&self, walking_dir: &Direction) -> Result<Direction> {
         match (self, walking_dir) {
-            (TileType::Vertical, Direction::North) => Ok(Direction::North),
-            (TileType::Vertical, Direction::South) => Ok(Direction::South),
-            (TileType::Horizontal, Direction::West) => Ok(Direction::West),
-            (TileType::Horizontal, Direction::East) => Ok(Direction::East),
-            (TileType::NorthEast, Direction::South) => Ok(Direction::East),
-            (TileType::NorthEast, Direction::West) => Ok(Direction::North),
-            (TileType::NorthWest, Direction::South) => Ok(Direction::West),
-            (TileType::NorthWest, Direction::East) => Ok(Direction::North),
-            (TileType::SouthEast, Direction::North) => Ok(Direction::East),
-            (TileType::SouthEast, Direction::West) => Ok(Direction::South),
-            (TileType::SouthWest, Direction::North) => Ok(Direction::West),
-            (TileType::SouthWest, Direction::East) => Ok(Direction::South),
-            (TileType::Ground, _) => Err("On Ground".into()),
-            (TileType::Start, dir) => Ok(*dir),
+            (TileType::Pipe(Pipe::Vertical), Direction::North) => Ok(Direction::North),
+            (TileType::Pipe(Pipe::Vertical), Direction::South) => Ok(Direction::South),
+            (TileType::Pipe(Pipe::Horizontal), Direction::West) => Ok(Direction::West),
+            (TileType::Pipe(Pipe::Horizontal), Direction::East) => Ok(Direction::East),
+            (TileType::Pipe(Pipe::NorthEast), Direction::South) => Ok(Direction::East),
+            (TileType::Pipe(Pipe::NorthEast), Direction::West) => Ok(Direction::North),
+            (TileType::Pipe(Pipe::NorthWest), Direction::South) => Ok(Direction::West),
+            (TileType::Pipe(Pipe::NorthWest), Direction::East) => Ok(Direction::North),
+            (TileType::Pipe(Pipe::SouthEast), Direction::North) => Ok(Direction::East),
+            (TileType::Pipe(Pipe::SouthEast), Direction::West) => Ok(Direction::South),
+            (TileType::Pipe(Pipe::SouthWest), Direction::North) => Ok(Direction::West),
+            (TileType::Pipe(Pipe::SouthWest), Direction::East) => Ok(Direction::South),
+            (TileType::Ground(_), _) => Err("On Ground".into()),
+            (TileType::Start(_), dir) => Ok(*dir),
             (tile, dir) => Err(format!("Pipe blocked walkin {:?} to {:?}", dir, tile).into()),
         }
+    }
+
+    fn is_uptile(&self) -> bool {
+        matches!(
+            self,
+            TileType::Pipe(Pipe::NorthEast)
+                | TileType::Pipe(Pipe::SouthEast)
+                | TileType::Start(Some(Pipe::NorthEast))
+                | TileType::Start(Some(Pipe::SouthEast))
+        )
+    }
+
+    fn is_downtile(&self) -> bool {
+        matches!(
+            self,
+            TileType::Pipe(Pipe::NorthWest)
+                | TileType::Pipe(Pipe::SouthWest)
+                | TileType::Start(Some(Pipe::NorthWest))
+                | TileType::Start(Some(Pipe::SouthWest))
+        )
+    }
+
+    fn get_pipe(&self) -> Pipe {
+        match self {
+            TileType::Pipe(pipe) => *pipe,
+            TileType::Start(Some(pipe)) => *pipe,
+            _ => panic!("Not a pipe: {:?}", self),
+        }
+    }
+
+    pub fn is_start(&self) -> bool {
+        matches!(self, TileType::Start(_))
     }
 }
 
 impl From<char> for TileType {
     fn from(value: char) -> Self {
         match value {
-            '-' => TileType::Horizontal,
-            '|' => TileType::Vertical,
-            '.' => TileType::Ground,
-            'L' => TileType::NorthEast,
-            'J' => TileType::NorthWest,
-            'F' => TileType::SouthEast,
-            '7' => TileType::SouthWest,
-            'S' => TileType::Start,
+            '-' => TileType::Pipe(Pipe::Horizontal),
+            '|' => TileType::Pipe(Pipe::Vertical),
+            'L' => TileType::Pipe(Pipe::NorthEast),
+            'J' => TileType::Pipe(Pipe::NorthWest),
+            'F' => TileType::Pipe(Pipe::SouthEast),
+            '7' => TileType::Pipe(Pipe::SouthWest),
+            '.' => TileType::Ground(None),
+            'S' => TileType::Start(None),
             _ => panic!("Unknown tile type: {}", value),
         }
     }
@@ -108,8 +151,35 @@ impl Tile {
 
 pub struct Maze {
     /// Col(Row(Tile)))
-    maze: Vec<Vec<Tile>>,
+    pub maze: Vec<Vec<Tile>>,
     pub start: Tile,
+}
+
+impl Debug for Maze {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let maze = self
+            .maze
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|tile| match tile.typ {
+                        TileType::Pipe(Pipe::Vertical) => '|',
+                        TileType::Pipe(Pipe::Horizontal) => '-',
+                        TileType::Pipe(Pipe::NorthEast) => 'L',
+                        TileType::Pipe(Pipe::NorthWest) => 'J',
+                        TileType::Pipe(Pipe::SouthEast) => 'F',
+                        TileType::Pipe(Pipe::SouthWest) => '7',
+                        TileType::Ground(None) => '.',
+                        TileType::Ground(Some(Location::Outter)) => 'O',
+                        TileType::Ground(Some(Location::Inner)) => 'I',
+                        TileType::Start(_) => 'S',
+                    })
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        write!(f, "{}", maze)
+    }
 }
 
 impl Maze {
@@ -119,14 +189,56 @@ impl Maze {
             .flatten()
             .filter(|tile| !main_pipe.contains_key(&tile.pos))
             .for_each(|tile| {
-                tile.typ = TileType::Ground;
+                tile.typ = TileType::Ground(None);
             });
     }
 
-    pub fn get_tile(&self, pos: &Position) -> Option<&Tile> {
+    pub fn get_tile(&mut self, pos: &Position) -> Option<&mut Tile> {
         self.maze
-            .get(pos.col as usize)
-            .and_then(|row| row.get(pos.row as usize))
+            .get_mut(pos.col as usize)
+            .and_then(|row| row.get_mut(pos.row as usize))
+    }
+
+    ///Maze should be cleaned up before calling this
+    ///returns the number of inner tiles
+    pub fn define_ground(&mut self) -> usize {
+        self.maze.iter_mut().for_each(|row| {
+            row.iter_mut()
+                .fold((0, None), |(vertical_cnt, up_tile), tile| match tile.typ {
+                    TileType::Ground(_) => {
+                        let is_outer = vertical_cnt % 2 == 0;
+                        let cur_loc = if is_outer {
+                            Location::Outter
+                        } else {
+                            Location::Inner
+                        };
+                        tile.typ = TileType::Ground(Some(cur_loc));
+                        (vertical_cnt, None)
+                    }
+                    TileType::Pipe(Pipe::Vertical) => (vertical_cnt + 1, None),
+                    up_tile if up_tile.is_uptile() => {
+                        
+                        (vertical_cnt, Some(up_tile.get_pipe()))
+
+                    },
+                    down_tile if down_tile.is_downtile() => {
+                        match (up_tile.unwrap(), down_tile.get_pipe()) {
+                            (Pipe::NorthEast, Pipe::NorthWest) => (vertical_cnt, None),
+                            (Pipe::NorthEast, Pipe::SouthWest) => (vertical_cnt + 1, None),
+                            (Pipe::SouthEast, Pipe::SouthWest) => (vertical_cnt, None),
+                            (Pipe::SouthEast, Pipe::NorthWest) => (vertical_cnt + 1, None),
+                            _ => panic!("Invalid pipe: {:?} {:?}", up_tile, down_tile),
+                        }
+                    }
+                    _ => (vertical_cnt, up_tile),
+                });
+        });
+
+        self.maze
+            .iter()
+            .flatten()
+            .filter(|tile| matches!(tile.typ, TileType::Ground(Some(Location::Inner))))
+            .count()
     }
 }
 
@@ -149,7 +261,7 @@ impl From<&str> for Maze {
                             };
                             row.push(tile);
 
-                            let start = if tile.typ == TileType::Start {
+                            let start = if tile.typ == TileType::Start(None) {
                                 if start.is_some() {
                                     panic!("Multiple start tiles");
                                 }
