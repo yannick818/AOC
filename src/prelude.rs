@@ -23,5 +23,11 @@ impl std::convert::From<&str> for AocError {
     }
 }
 
+impl std::convert::From<String> for AocError {
+    fn from(value: String) -> Self {
+        Self::Generic(value)
+    }
+}
+
 pub type Result<T> = std::result::Result<T, AocError>;
 
