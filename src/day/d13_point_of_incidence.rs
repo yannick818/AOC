@@ -2,9 +2,8 @@ use array2d::Array2D;
 
 use crate::prelude::*;
 
-#[test]
-fn test_reflection_code() {
-    let input = "#.##..##.
+#[allow(dead_code)]
+const INPUT: &str = "#.##..##.
 ..#.##.#.
 ##......#
 ##......#
@@ -20,7 +19,14 @@ fn test_reflection_code() {
 ..##..###
 #....#..#";
 
-    assert_eq!(405, cal_reflection_code(input).unwrap());
+#[test]
+fn test_reflection_code() {
+    assert_eq!(405, cal_reflection_code(INPUT).unwrap());
+}
+
+#[test]
+fn test_reflection_code2() {
+    assert_eq!(400, cal_reflection_code2(INPUT).unwrap());
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,31 +77,34 @@ impl Pattern {
         })
         .collect()
     }
+    
+    fn find_clean(&self) -> Mirror {
+        self.find_mirror(0)
+    }
 
-    fn find_mirror(&self) -> Mirror {
-        let horizontal_mirror = self.tiles.rows_iter().enumerate().find_map(|(i, _)| {
-            let rows = self.tiles.as_rows();
-            let (left, right) = rows.split_at(i);
-            let comp = right.iter().zip(left.iter().rev()).collect::<Vec<_>>();
-            let symmetric = comp.iter().all(|(r, l)| r == l);
-            if symmetric && !comp.is_empty() {
-                Some(Mirror::Horizontal(i))
+    fn find_smudge(&self) -> Mirror {
+        self.find_mirror(1)
+    }
+
+    fn find_mirror(&self, smuge_cnt: usize) -> Mirror {
+
+        let horizontal_mirrot = self.find_horizonal().into_iter()
+        .find_map(|reflection| {
+            if reflection.smudge_count == smuge_cnt {
+                Some(reflection.mirror)
             } else {
                 None
             }
         });
 
-        if let Some(mirror) = horizontal_mirror {
+        if let Some(mirror) = horizontal_mirrot {
             return mirror;
         }
 
-        let vertical_mirror = self.tiles.columns_iter().enumerate().find_map(|(i, _)| {
-            let columns = self.tiles.as_columns();
-            let (top, bottom) = columns.split_at(i);
-            let comp = bottom.iter().zip(top.iter().rev()).collect::<Vec<_>>();
-            let symmetric = comp.iter().all(|(b, t)| b == t);
-            if symmetric && !comp.is_empty() {
-                Some(Mirror::Vertical(i))
+        let vertical_mirror = self.find_vertical().into_iter()
+        .find_map(|reflection| {
+            if reflection.smudge_count == smuge_cnt {
+                Some(reflection.mirror)
             } else {
                 None
             }
@@ -103,10 +112,75 @@ impl Pattern {
 
         vertical_mirror.unwrap()
     }
+
+    fn find_horizonal(&self) -> Vec<Reflection> {
+
+        self.tiles.rows_iter().enumerate().filter_map(|(i, _)| {
+            let rows = self.tiles.as_rows();
+            let (left, right) = rows.split_at(i);
+            let comp = right.iter().zip(left.iter().rev()).collect::<Vec<_>>();
+            let smudges = comp.iter()
+            .flat_map(|(rhs, lhs)| {
+                rhs.iter().zip(lhs.iter())
+            })
+            .fold(0, |smudges, (rhs, lhs)| {
+                if rhs == lhs {
+                    smudges
+                } else {
+                    smudges + 1
+                }
+            });
+
+            if !comp.is_empty() {
+                Some(Reflection{ mirror: Mirror::Horizontal(i), smudge_count: smudges })
+            } else {
+                None
+            }
+        })
+        .collect()
+    }
+    
+    fn find_vertical(&self) -> Vec<Reflection> {
+
+        self.tiles.columns_iter().enumerate().filter_map(|(i, _)| {
+            let col = self.tiles.as_columns();
+            let (top, bottom) = col.split_at(i);
+            let comp = bottom.iter().zip(top.iter().rev()).collect::<Vec<_>>();
+            let smudges = comp.iter()
+            .flat_map(|(rhs, lhs)| {
+                rhs.iter().zip(lhs.iter())
+            })
+            .fold(0, |smudges, (rhs, lhs)| {
+                if rhs == lhs {
+                    smudges
+                } else {
+                    smudges + 1
+                }
+            });
+
+            if !comp.is_empty() {
+                Some(Reflection{ mirror: Mirror::Vertical(i), smudge_count: smudges })
+            } else {
+                None
+            }
+        })
+        .collect()
+    }
+}
+
+struct Reflection {
+    mirror: Mirror,
+    smudge_count: usize,
 }
 
 pub fn cal_reflection_code(input: &str) -> Result<usize> {
     let patterns = Pattern::parse(input);
-    let code = patterns.iter().map(|p| p.find_mirror().value()).sum();
+    let code = patterns.iter().map(|p| p.find_clean().value()).sum();
+    Ok(code)
+}
+
+pub fn cal_reflection_code2(input: &str) -> Result<usize> {
+    let patterns = Pattern::parse(input);
+    let code = patterns.iter().map(|p| p.find_smudge().value()).sum();
     Ok(code)
 }

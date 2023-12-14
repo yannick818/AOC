@@ -67,7 +67,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/13.txt")?;
     println!("Day 13.1: {}", d13_point_of_incidence::cal_reflection_code(&input)?); 
-    // println!("Day 13.2: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
+    println!("Day 13.2: {}", d13_point_of_incidence::cal_reflection_code2(&input)?); 
 
     Ok(())
 }
