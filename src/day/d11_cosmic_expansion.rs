@@ -1,9 +1,10 @@
-use std::collections::HashSet;
+use std::{collections::{HashSet, HashMap}, fmt::Debug};
 
 use crate::prelude::*;
 
 #[allow(dead_code)]
-const INPUT: &str = "...#......
+const INPUT: &str = 
+"...#......
 .......#..
 #.........
 ..........
@@ -15,8 +16,18 @@ const INPUT: &str = "...#......
 #...#.....";
 
 #[test]
-fn test_sum_of_paths() {
-    assert_eq!(374, cal_sum_of_paths(INPUT).unwrap());
+fn test_sum_of_paths_2() {
+    assert_eq!(374, cal_sum_of_paths(INPUT, 2).unwrap());
+}
+
+#[test]
+fn test_sum_of_paths_10() {
+    assert_eq!(1030, cal_sum_of_paths(INPUT, 10).unwrap());
+}
+
+#[test]
+fn test_sum_of_paths_100() {
+    assert_eq!(8410, cal_sum_of_paths(INPUT, 100).unwrap());
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -37,108 +48,118 @@ impl From<char> for Element {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Coordinate {
-    x: usize,
-    y: usize,
+    row: usize,
+    col: usize,
 
 }
 
 impl Coordinate {
     fn distance(&self, other: &Self) -> usize {
-        let dx = self.x as isize - other.x as isize;
-        let dy = self.y as isize - other.y as isize;
+        let dx = self.row as isize - other.row as isize;
+        let dy = self.col as isize - other.col as isize;
         (dx.abs() + dy.abs()) as usize
     }
 }
 
+type Start = Coordinate;
 struct Universe {
-    elements: Vec<Vec<Element>>,
+    row_len: usize,
+    col_len: usize,
+    galaxies: HashMap<Start, Coordinate>,
 }
 
 impl Universe {
-    fn expand(&mut self) {
-        let old_universe = self.elements.clone();
-        // double empty rows
-        old_universe.iter()
-        .enumerate()
-        .filter(|(_, row)| row.iter().all(|&e| e == Element::Empty))
-        .rev() //Backwards to dont mess up indices
-        .for_each(|(index, empty_row)| {
-            self.elements.insert(index, vec![Element::Empty; empty_row.len()]);
+    fn expand(&mut self, expansion_rate: usize) {
+        (0..self.row_len).for_each(|row_idx| {
+            let is_empty = !self.galaxies.iter()
+            .any(|(start_coord, _)| start_coord.row == row_idx);
+
+            if is_empty {
+                self.galaxies.iter_mut()
+                .filter(|(start, _)| start.row > row_idx)
+                .for_each(|(_, moved_coord)| moved_coord.row += expansion_rate - 1);
+            }
         });
         
-        // double empty columns
-        let col_len = self.elements[0].len();
-        (0..col_len)
-        .map(|col_idx| {
-            old_universe.iter()
-            .map(move |row| row[col_idx])
-        })
-        .enumerate()
-        .filter_map(|(col_idx, mut col)| {
-            let is_empty = col.all(|e| e == Element::Empty);
+        (0..self.col_len).for_each(|col_idx| {
+            let is_empty = !self.galaxies.iter()
+            .any(|(start_coord, _)| start_coord.col == col_idx);
+
             if is_empty {
-                Some(col_idx)
-            } else {
-                None
+                self.galaxies.iter_mut()
+                .filter(|(start, _)| start.col > col_idx)
+                .for_each(|(_, moved_coord)| moved_coord.col += expansion_rate - 1);
             }
-        })
-        .rev() //Backwards to dont mess up indices
-        .for_each(|empty_col_idx| {
-            self.elements.iter_mut().for_each(|row| row.insert(empty_col_idx, Element::Empty));
         });
 
     }
 
-    fn get_galaxies(&self) -> HashSet<Coordinate> {
-        self.elements.iter()
-        .enumerate()
-        .fold(HashSet::new(), |mut galaxies, (y, row)| {
-            row.iter()
-            .enumerate()
-            .filter(|(_, &e)| e == Element::Galaxy)
-            .for_each(|(x, _)| {
-                galaxies.insert(Coordinate {x, y});
+    fn get_combinations(&self) -> HashSet<(Coordinate, Coordinate)> {
+        let new_locations = self.galaxies.values().cloned().collect::<HashSet<_>>();
+        let (combinations, _) = self.galaxies
+        .values()
+        .fold((HashSet::new(), new_locations), |(mut combinations, mut galaxies), galaxy| {
+            galaxies.remove(galaxy);
+            galaxies.iter()
+            .for_each(|other_galaxy| {
+                combinations.insert((*galaxy, *other_galaxy));
             });
-            galaxies
-        })
+            (combinations, galaxies)
+        });
+        combinations
+    }
+}
+
+impl Debug for Universe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut galaxies = self.galaxies.iter().collect::<Vec<_>>();
+        galaxies.sort_by_key(|(start, _)| start.row);
+
+        for (start, coord) in galaxies {
+            writeln!(f, "({}, {}) -> ({}, {})", start.row, start.col, coord.row, coord.col)?;
+        };
+        Ok(())
     }
 }
 
 impl From<&str> for Universe {
-    fn from(s: &str) -> Self {
-        let elements = s.lines()
-        .map(|line| {
+    fn from(input: &str) -> Self {
+       let galaxies = input.lines()
+       .enumerate() 
+       .flat_map(|(col_idx, line)| {
             line.chars()
-            .map(Element::from)
-            .collect()
-        })
-        .collect();
+            .enumerate()
+            .map(move |(row_idx, c)| {
+                let coord = Coordinate {
+                    row: row_idx,
+                    col: col_idx,
+                };
+                (Element::from(c), coord)
+            })
+       })
+        .filter(|(element, _)| *element == Element::Galaxy)
+        .map(|(_, coord)| (coord, coord))
+        .collect::<HashMap<_, _>>();
 
         Self {
-            elements
+            row_len: input.lines().count(),
+            col_len: input.lines().next().unwrap().len(),
+            galaxies,
         }
     }
 }
 
-fn get_combinations(galaxies: &HashSet<Coordinate>) -> HashSet<(Coordinate, Coordinate)> {
-    let (combinations, _) = galaxies.iter()
-    .fold((HashSet::new(), galaxies.clone()), |(mut comb, mut galaxies), galaxy| {
-        galaxies.remove(galaxy);
-        galaxies.iter()
-        .for_each(|other_galaxy| {
-            comb.insert((*galaxy, *other_galaxy));
-        });
-        (comb, galaxies)
-    });
-    combinations
-}
 
-pub fn cal_sum_of_paths(input: &str) -> Result<usize> {
+pub fn cal_sum_of_paths(input: &str, expansion_rate: usize) -> Result<usize> {
     let mut universe = Universe::from(input);
-    universe.expand();
-    let galaxies = universe.get_galaxies();
 
-    let sum = get_combinations(&galaxies).iter()
+    // println!("{:?}", universe);
+
+    universe.expand(expansion_rate);
+
+    // println!("{:?}", universe);
+    
+    let sum = universe.get_combinations().iter()
     .map(|(galaxy, other_galaxy)| galaxy.distance(other_galaxy))
     .sum();
     Ok(sum)

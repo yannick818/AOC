@@ -29,6 +29,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/5.txt")?;
     println!("Day 5.1: {}", d5_fertilizer::cal_lowest_location(&input)?);
+    //HACK do a little runner, so that the rest is not blocked; maybe meassure all days
     //30s with par_iter, 115s without 
     // let start = Instant::now();
     // println!("Day 5.2: {}", d5_fertiliter::cal_lowest_loc_ranges(&input)?);
@@ -57,8 +58,8 @@ fn main() -> Result<()> {
     println!("Day 10.2: {}", d10_pipe_maze::cal_enclosed_tiles(&input)?); 
 
     let input = read_file("input/11.txt")?;
-    println!("Day 11.1: {}", d11_cosmic_expansion::cal_sum_of_paths(&input)?); 
-    // println!("Day 11.2: {}", d10_pipe_maze::cal_enclosed_tiles(&input)?); 
+    println!("Day 11.1: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1)?); 
+    println!("Day 11.2: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
 
     Ok(())
 }
