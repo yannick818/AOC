@@ -61,6 +61,14 @@ fn main() -> Result<()> {
     println!("Day 11.1: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1)?); 
     println!("Day 11.2: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
 
+    // let input = read_file("input/12.txt")?;
+    // println!("Day 12.1: {}", d12_hot_springs::cal_arrangement_sum(&input)?); 
+    // println!("Day 12.2: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
+
+    let input = read_file("input/13.txt")?;
+    println!("Day 13.1: {}", d13_point_of_incidence::cal_reflection_code(&input)?); 
+    // println!("Day 13.2: {}", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
+
     Ok(())
 }
 

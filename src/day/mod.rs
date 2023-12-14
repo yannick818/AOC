@@ -9,3 +9,5 @@ pub mod d8_haunted_wasteland;
 pub mod d9_mirage_maintenance;
 pub mod d10_pipe_maze;
 pub mod d11_cosmic_expansion;
+pub mod d12_hot_springs;
+pub mod d13_point_of_incidence;
