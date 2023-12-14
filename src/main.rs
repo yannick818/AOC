@@ -56,6 +56,10 @@ fn main() -> Result<()> {
     println!("Day 10.1: {}", d10_pipe_maze::cal_maze_distance(&input)?); 
     println!("Day 10.2: {}", d10_pipe_maze::cal_enclosed_tiles(&input)?); 
 
+    let input = read_file("input/11.txt")?;
+    println!("Day 11.1: {}", d11_cosmic_expansion::cal_sum_of_paths(&input)?); 
+    // println!("Day 11.2: {}", d10_pipe_maze::cal_enclosed_tiles(&input)?); 
+
     Ok(())
 }
 

@@ -96,7 +96,7 @@ fn get_main_pipe(maze: &mut Maze) -> HashMap<Position, Tile> {
 pub fn cal_maze_distance(input: &str) -> Result<usize> {
     let mut maze = Maze::from(input);
     let len = get_main_pipe(&mut maze).len();
-    println!("{:#?}", maze);
+    // println!("{:#?}", maze);
     Ok(len / 2)
 }
 
@@ -104,7 +104,7 @@ pub fn cal_enclosed_tiles(input: &str) -> Result<usize> {
     let mut maze = Maze::from(input);
     let main_pipe = get_main_pipe(&mut maze);
     maze.cleanup(&main_pipe);
-    println!("{:#?}", maze);
+    // println!("{:#?}", maze);
     let inner_tiles = maze.define_ground();
     Ok(inner_tiles)
 }
