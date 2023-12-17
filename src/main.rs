@@ -71,7 +71,12 @@ fn main() -> Result<()> {
 
     let input = read_file("input/14.txt")?;
     println!("Day 14.1: {}", d14_parabolic_reflector_dish::cal_total_load(&input)?); 
-    println!("Day 14.2: {}", d14_parabolic_reflector_dish::cal_load_after(&input, 1_000_000_000)?); 
+    // this is too slow
+    // println!("Day 14.2: {}", d14_parabolic_reflector_dish::cal_load_after(&input, 1_000_000_000)?); 
+
+    let input = read_file("input/15.txt")?;
+    println!("Day 15.1: {}", d15_lens_library::cal_hash_sum(&input)?); 
+    // println!("Day 15.2: {}", d14_parabolic_reflector_dish::cal_load_after(&input, 1_000_000_000)?); 
 
     Ok(())
 }

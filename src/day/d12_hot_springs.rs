@@ -1,3 +1,7 @@
+// TODO remove these
+#![allow(dead_code)]
+#![allow(unused)]
+
 use crate::prelude::*;
 
 #[allow(dead_code)]
@@ -85,20 +89,18 @@ impl Record {
     fn different_arrangements(&self) -> usize {
         //^\.*(\?*#{0,1})\.+(\?*#{0,1})\.+(\?*#{0,3})\.*$
         todo!("should be solveable with regex?");
-        for group_len in &self.damaged_group_size {
-            // self.spring_groups.iter()
-            // .fi
-            for group in &self.spring_groups {
-                if group.could_contain(*group_len) {
-                    todo!()
-                }
-            }
-        }
-        todo!()
+        // for group_len in &self.damaged_group_size {
+        //     // self.spring_groups.iter()
+        //     // .fi
+        //     for group in &self.spring_groups {
+        //         if group.could_contain(*group_len) {
+        //             todo!()
+        //         }
+        //     }
+        // }
     }
 }
 
-#[allow(dead_code)]
 pub fn cal_arrangement_sum(input: &str) -> Result<usize> {
     let records = Record::parse(input);
 
