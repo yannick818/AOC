@@ -1,3 +1,4 @@
+use core::panic;
 use std::{cmp::Ordering, fmt::Debug};
 
 use array2d::Array2D;
@@ -21,6 +22,11 @@ fn test_total_load() {
     assert_eq!(136, cal_total_load(INPUT).unwrap());
 }
 
+#[test]
+fn test_total_load2() {
+    assert_eq!(64, cal_load_after(INPUT, 1_000_000_000).unwrap());
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Element {
     Empty,
@@ -39,28 +45,57 @@ impl From<char> for Element {
     }
 }
 
+#[derive(Debug)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn sort(&self, a: &Element, b: &Element) -> Ordering {
+        match (self, a, b) {
+            (_, Element::FixRock, _) => panic!("Canbot sort on fixed rock"),
+            (_, _, Element::FixRock) => panic!("Canbot sort on fixed rock"),
+            (_, a, b) if a == b => Ordering::Equal,
+            (Direction::Up, Element::RoundRock, _) => Ordering::Less,
+            (Direction::Up, _, Element::RoundRock) => Ordering::Greater,
+            (Direction::Down, Element::RoundRock, _) => Ordering::Greater,
+            (Direction::Down, _, Element::RoundRock) => Ordering::Less,
+            (Direction::Left, Element::RoundRock, _) => Ordering::Less,
+            (Direction::Left, _, Element::RoundRock) => Ordering::Greater,
+            (Direction::Right, Element::RoundRock, _) => Ordering::Greater,
+            (Direction::Right, _, Element::RoundRock) => Ordering::Less,
+            _ => panic!("Invalid sort: {:?} {:?} {:?}", self, a, b),
+        }
+    }
+
+    fn needs_row(&self) -> bool {
+        matches!(self, Direction::Left | Direction::Right)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq)]
 struct Platrom {
     platform: Array2D<Element>,
 }
 
 impl Platrom {
-    fn tilt_up(&mut self) {
-        let new_cols = self
-            .platform
-            .as_columns()
+    fn tilt(&mut self, direction: Direction) {
+        let iter = if direction.needs_row() {
+            self.platform.as_rows()
+        } else {
+            self.platform.as_columns()
+        };
+        let new_cols = iter
             .into_iter()
             .map(|col| {
-                let mut new_col = col.split(|&e| e == Element::FixRock)
+                let mut new_col = col
+                    .split(|&e| e == Element::FixRock)
                     .map(|rollables| rollables.to_vec())
                     .flat_map(|mut rollables| {
-                        rollables.sort_by(|a, b| {
-                            match (a, b) {
-                                (Element::Empty, Element::RoundRock) => Ordering::Greater,
-                                (Element::RoundRock, Element::Empty) => Ordering::Less,
-                                // TODO here could be a panic on FixedRock
-                                _ => Ordering::Equal,
-                            }
-                        });
+                        rollables.sort_by(|a, b| direction.sort(a, b));
                         rollables.push(Element::FixRock);
                         rollables
                     })
@@ -71,7 +106,11 @@ impl Platrom {
             })
             .collect::<Vec<_>>();
 
-        self.platform = Array2D::from_columns(&new_cols).unwrap();
+        if direction.needs_row() {
+            self.platform = Array2D::from_rows(&new_cols).unwrap();
+        } else {
+            self.platform = Array2D::from_columns(&new_cols).unwrap();
+        }
     }
 
     fn cal_load(&self) -> usize {
@@ -119,8 +158,31 @@ impl Debug for Platrom {
 pub fn cal_total_load(input: &str) -> Result<usize> {
     let mut platform = Platrom::from(input);
     println!("{:?}", platform);
-    platform.tilt_up();
+    platform.tilt(Direction::Up);
     println!("{:?}", platform);
+    let load = platform.cal_load();
+    Ok(load)
+}
+
+pub fn cal_load_after(input: &str, rounds: usize) -> Result<usize> {
+    let mut platform = Platrom::from(input);
+    for i in 0..rounds {
+        println!("Round {}", i);
+        let start = platform.clone();
+        // println!("{:?}", platform);
+        platform.tilt(Direction::Up);
+        // println!("{:?}", platform);
+        platform.tilt(Direction::Left);
+        // println!("{:?}", platform);
+        platform.tilt(Direction::Down);
+        // println!("{:?}", platform);
+        platform.tilt(Direction::Right);
+        // println!("{:?}", platform);
+        // println!("-----------------------");
+        if start == platform {
+            break;
+        }
+    }
     let load = platform.cal_load();
     Ok(load)
 }
