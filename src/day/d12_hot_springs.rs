@@ -1,6 +1,5 @@
 use crate::prelude::*;
 
-
 #[allow(dead_code)]
 const INPUT: &str = "???.### 1,1,3
 .??..??...?##. 1,1,3
@@ -18,7 +17,7 @@ fn test_cal_arrangement_sum() {
 enum Spring {
     Operational,
     Damaged,
-    Unknown
+    Unknown,
 }
 
 impl From<char> for Spring {
@@ -27,7 +26,7 @@ impl From<char> for Spring {
             '.' => Spring::Operational,
             '#' => Spring::Damaged,
             '?' => Spring::Unknown,
-            _ => panic!("invalid char: {}", c)
+            _ => panic!("invalid char: {}", c),
         }
     }
 }
@@ -40,14 +39,23 @@ impl Group {
     /// checks if a group of cnt damaged pipes would fit in this group
     fn could_contain(&self, cnt: usize) -> bool {
         let len = self.springs.len();
-        let damaged_cnt = self.springs.iter().filter(|&s| *s == Spring::Damaged).count();
+        let damaged_cnt = self
+            .springs
+            .iter()
+            .filter(|&s| *s == Spring::Damaged)
+            .count();
         len >= cnt && damaged_cnt >= cnt
+    }
+
+    fn reduce(&mut self, dmg_cnt: usize) -> Self {
+        todo!()
     }
 }
 
 struct Record {
     spring_groups: Vec<Group>,
     damaged_group_size: Vec<usize>,
+    damaged_spring_count: usize,
 }
 
 impl Record {
@@ -55,8 +63,28 @@ impl Record {
         todo!()
     }
 
+    fn reduce(&mut self) -> bool {
+        for damaged_size in self.damaged_group_size.iter() {
+            let fittable_group = self
+                .spring_groups
+                .iter_mut()
+                .filter(|g| g.could_contain(*damaged_size))
+                .collect::<Vec<_>>();
+
+            let only_hit = fittable_group.len() == 1;
+            if only_hit {
+                // let mut group = fittable_group[0];
+                // let new_groups = group.reduce(*damaged_size);
+                // self.spring_groups.extend(new_groups);
+                return true;
+            }
+        }
+        todo!()
+    }
+
     fn different_arrangements(&self) -> usize {
-        todo!("should ne solveable with regex?");
+        //^\.*(\?*#{0,1})\.+(\?*#{0,1})\.+(\?*#{0,3})\.*$
+        todo!("should be solveable with regex?");
         for group_len in &self.damaged_group_size {
             // self.spring_groups.iter()
             // .fi
@@ -70,7 +98,7 @@ impl Record {
     }
 }
 
-
+#[allow(dead_code)]
 pub fn cal_arrangement_sum(input: &str) -> Result<usize> {
     let records = Record::parse(input);
 

@@ -11,3 +11,4 @@ pub mod d10_pipe_maze;
 pub mod d11_cosmic_expansion;
 pub mod d12_hot_springs;
 pub mod d13_point_of_incidence;
+pub mod d14_parabolic_reflector_dish;

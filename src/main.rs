@@ -69,6 +69,10 @@ fn main() -> Result<()> {
     println!("Day 13.1: {}", d13_point_of_incidence::cal_reflection_code(&input)?); 
     println!("Day 13.2: {}", d13_point_of_incidence::cal_reflection_code2(&input)?); 
 
+    let input = read_file("input/14.txt")?;
+    println!("Day 14.1: {}", d14_parabolic_reflector_dish::cal_total_load(&input)?); 
+    // println!("Day 14.2: {}", d13_point_of_incidence::cal_reflection_code2(&input)?); 
+
     Ok(())
 }
 
