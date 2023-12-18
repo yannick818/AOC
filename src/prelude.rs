@@ -31,3 +31,15 @@ impl std::convert::From<String> for AocError {
 
 pub type Result<T> = std::result::Result<T, AocError>;
 
+pub const LINE_ENDING: &str = if cfg!(windows) {
+    "\r\n"
+} else {
+    "\n"
+};
+
+#[test]
+fn test_os_var() {
+    let os = std::env::var("OS").unwrap();
+    println!("{}", os);
+    assert_eq!("\r\n", LINE_ENDING);
+}

@@ -177,13 +177,13 @@ impl Almanac {
 
     fn new(input: &str, seed_gen: SeedGenerator) -> Self {
         let seeds = seed_gen(input);
-        let seed_to_soil = Almanac::cal_map(input, "seed-to-soil map:\n");
-        let soil_to_fertilizer = Almanac::cal_map(input, "soil-to-fertilizer map:\n");
-        let fertilizer_to_water = Almanac::cal_map(input, "fertilizer-to-water map:\n");
-        let water_to_light = Almanac::cal_map(input, "water-to-light map:\n");
-        let light_to_temperature = Almanac::cal_map(input, "light-to-temperature map:\n");
-        let temperature_to_humidity = Almanac::cal_map(input, "temperature-to-humidity map:\n");
-        let humidity_to_location = Almanac::cal_map(input, "humidity-to-location map:\n");
+        let seed_to_soil = Almanac::cal_map(input, "seed-to-soil map:".to_owned()+LINE_ENDING);
+        let soil_to_fertilizer = Almanac::cal_map(input, "soil-to-fertilizer map:".to_owned()+LINE_ENDING);
+        let fertilizer_to_water = Almanac::cal_map(input, "fertilizer-to-water map:".to_owned()+LINE_ENDING);
+        let water_to_light = Almanac::cal_map(input, "water-to-light map:".to_owned()+LINE_ENDING);
+        let light_to_temperature = Almanac::cal_map(input, "light-to-temperature map:".to_owned()+LINE_ENDING);
+        let temperature_to_humidity = Almanac::cal_map(input, "temperature-to-humidity map:".to_owned()+LINE_ENDING);
+        let humidity_to_location = Almanac::cal_map(input, "humidity-to-location map:".to_owned()+LINE_ENDING);
 
         Self {
             seeds,
@@ -197,8 +197,9 @@ impl Almanac {
         }
     }
 
-    fn cal_map<A, B>(input: &str, name: &str) -> IdMap<A, B>{
-        input.split(name).nth(1).unwrap().split("\n\n").next().unwrap()
+    fn cal_map<A, B>(input: &str, name: String) -> IdMap<A, B> {
+        let double_line = LINE_ENDING.to_owned() + LINE_ENDING;
+        input.split(&name).nth(1).unwrap().split(&double_line).next().unwrap()
         .lines().map(|line| {
             let vec = line.split(' ').map(|s| s.parse().unwrap()).collect::<Vec<u64>>();
             (vec[0], vec[1], vec[2])

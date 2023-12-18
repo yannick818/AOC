@@ -163,7 +163,8 @@ pub fn cal_steps_simultanious(input: &str) -> Result<u64> {
 }
 
 fn parse_network(input: &str) -> (Vec<Instruction>, HashMap<Node, Network>) {
-    let (instructions, networks) = input.split_once("\n\n").unwrap();    
+    let double_line = LINE_ENDING.to_owned() + LINE_ENDING;
+    let (instructions, networks) = input.split_once(&double_line).unwrap();    
     let instructions = instructions.chars().map(Instruction::from).collect::<Vec<_>>();
 
     let networks = networks.lines()

@@ -65,7 +65,8 @@ struct Pattern {
 
 impl Pattern {
     fn parse(input: &str) -> Vec<Self> {
-        input.split("\n\n").map(|input| {
+        let double_line = LINE_ENDING.to_owned() + LINE_ENDING;
+        input.split(&double_line).map(|input| {
             let patterns = input
                 .lines()
                 .map(|line| line.chars().map(Tile::from).collect())

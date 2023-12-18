@@ -46,13 +46,13 @@ impl Boat {
 pub fn cal_ways_to_win(input: &str) -> Result<u64> {
     let races = parse_races(input);
     let mult = mult_ways_to_win(&races);    
-    Ok(mult as u64)
+    Ok(mult)
 }
 
 pub fn cal_ways_to_win2(input: &str) -> Result<u64> {
     let races = parse_race(input);
     let mult = mult_ways_to_win(&[races]);    
-    Ok(mult as u64)
+    Ok(mult)
 }
 
 fn mult_ways_to_win(races: &[Race]) -> u64 {
