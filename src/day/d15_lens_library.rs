@@ -94,7 +94,7 @@ pub fn cal_focus_power(input: &str) -> Result<usize> {
                 .collect(),
             Operation::FocalLen(len) => {
                 let lens = old_box.iter_mut().find(|s| s.label == step.label);
-                if let Some(mut step) = lens {
+                if let Some(step) = lens {
                     step.operation = Operation::FocalLen(len);
                 } else {
                     old_box.push(step);
