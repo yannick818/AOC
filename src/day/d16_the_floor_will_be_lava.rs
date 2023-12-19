@@ -20,6 +20,11 @@ fn test_energized_tiles() {
     assert_eq!(46, cal_energized_tiles(INPUT).unwrap());
 }
 
+#[test]
+fn test_max_energized_tiles() {
+    assert_eq!(51, cal_max_energized_tiles(INPUT).unwrap());
+}
+
 #[derive(Clone, Copy)]
 enum Tile {
     Empty,
@@ -118,6 +123,7 @@ enum Direction {
 
 type Energized = bool;
 
+#[derive(Clone)]
 struct Floor {
     floor: Array2D<(Tile, Energized, HashSet<Direction>)>,
 }
@@ -138,15 +144,15 @@ impl Floor {
         }
     }
 
-    fn walk_start(&mut self) {
-        let mut queue = vec![(Position(0, 0), Direction::Right)];
+    fn walk_start(&mut self, pos: Position, dir: Direction) {
+        let mut queue = vec![(pos, dir)];
         while let Some((pos, dir)) = queue.pop() {
-            let new_dirs = self.walk(pos, dir);
-            queue.extend(new_dirs);
+            let mut new_dirs = self.walk_step(pos, dir);
+            queue.append(&mut new_dirs);
         }
     }
 
-    fn walk(&mut self, pos: Position, dir: Direction) -> Vec<(Position, Direction)> {
+    fn walk_step(&mut self, pos: Position, dir: Direction) -> Vec<(Position, Direction)> {
         let tile = self.floor.get_mut(pos.0, pos.1);
         if tile.is_none() {
             //reached end of floor
@@ -173,11 +179,63 @@ impl Floor {
             .filter(|(_, energized, _)| *energized)
             .count()
     }
+
+    fn find_max(&self) -> usize {
+        let row_cnt = self.floor.column_len();
+        let col_cnt = self.floor.row_len();
+
+        let mut first_row = (0..col_cnt)
+        .map(|i| {
+            (Position(0, i), Direction::Down)
+        })
+        .collect::<Vec<_>>();
+
+        let mut last_row = (0..col_cnt)
+        .map(|i| {
+            (Position(row_cnt-1, i), Direction::Up)
+        })
+        .collect::<Vec<_>>();
+
+        let mut first_col = (0..row_cnt)
+        .map(|i| {
+            (Position(i, 0), Direction::Right)
+        })
+        .collect::<Vec<_>>();
+
+        let mut last_col = (0..row_cnt)
+        .map(|i| {
+            (Position(i, col_cnt-1), Direction::Left)
+        })
+        .collect::<Vec<_>>();
+
+
+        let mut start = Vec::new();
+        start.append(&mut first_row);
+        start.append(&mut last_row);
+        start.append(&mut first_col);
+        start.append(&mut last_col);
+        
+        let max = start.into_iter()
+        .map(|(pos, dir)| {
+            let mut floor = self.clone();
+            floor.walk_start(pos, dir);
+            floor.get_energized()
+        })
+        .max();
+
+        max.unwrap()
+    }
 }
 
 pub fn cal_energized_tiles(input: &str) -> Result<usize> {
     let mut floor = Floor::parse(input);
-    floor.walk_start();
+    floor.walk_start(Position(0,0), Direction::Right);
     let energized = floor.get_energized();
     Ok(energized)
+}
+
+pub fn cal_max_energized_tiles(input: &str) -> Result<usize> {
+    let floor = Floor::parse(input);
+    let max = floor.find_max();
+    Ok(max)
 }

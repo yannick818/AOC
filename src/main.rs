@@ -80,7 +80,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/16.txt")?;
     println!("Day 16.1: {}", d16_the_floor_will_be_lava::cal_energized_tiles(&input)?); 
-    // println!("Day 16.2: {}", d15_lens_library::cal_focus_power(&input)?); 
+    println!("Day 16.2: {}", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
 
     Ok(())
 }
