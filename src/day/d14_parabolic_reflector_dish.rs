@@ -165,6 +165,7 @@ pub fn cal_total_load(input: &str) -> Result<usize> {
     Ok(load)
 }
 
+//TODO Implement D14.2
 #[allow(dead_code)]
 pub fn cal_load_after(input: &str, rounds: usize) -> Result<usize> {
     let mut platform = Platrom::from(input);

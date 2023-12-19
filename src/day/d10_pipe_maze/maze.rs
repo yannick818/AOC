@@ -216,11 +216,7 @@ impl Maze {
                         (vertical_cnt, None)
                     }
                     TileType::Pipe(Pipe::Vertical) => (vertical_cnt + 1, None),
-                    up_tile if up_tile.is_uptile() => {
-                        
-                        (vertical_cnt, Some(up_tile.get_pipe()))
-
-                    },
+                    up_tile if up_tile.is_uptile() => (vertical_cnt, Some(up_tile.get_pipe())),
                     down_tile if down_tile.is_downtile() => {
                         match (up_tile.unwrap(), down_tile.get_pipe()) {
                             (Pipe::NorthEast, Pipe::NorthWest) => (vertical_cnt, None),

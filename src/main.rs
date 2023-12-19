@@ -82,6 +82,10 @@ fn main() -> Result<()> {
     println!("Day 16.1: {}", d16_the_floor_will_be_lava::cal_energized_tiles(&input)?); 
     println!("Day 16.2: {}", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
 
+    // let input = read_file("input/18.txt")?;
+    // println!("Day 18.1: {}", d18_lavaduct_lagoon::cal_trench_volume(&input)?); 
+    // println!("Day 18.2: {}", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
+
     Ok(())
 }
 
