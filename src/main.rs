@@ -84,8 +84,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/14.txt")?;
     measure!("14.1", d14_parabolic_reflector_dish::cal_total_load(&input)?); 
-    // this is too slow
-    // measure!("14.2", d14_parabolic_reflector_dish::cal_load_after(&input, 1_000_000_000)?); 
+    measure!("14.2", d14_parabolic_reflector_dish::cal_load_after(&input, 1_000_000_000)?); 
 
     let input = read_file("input/15.txt")?;
     measure!("15.1", d15_lens_library::cal_hash_sum(&input)?); 
