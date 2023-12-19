@@ -1,7 +1,7 @@
 use array2d::Array2D;
 
 use crate::prelude::*;
-use std::fmt::Debug;
+use std::{fmt::Debug, collections::HashSet};
 
 #[allow(dead_code)]
 const INPUT: &str = ".|...\\....
@@ -108,7 +108,7 @@ impl Tile {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum Direction {
     Up,
     Down,
@@ -119,7 +119,7 @@ enum Direction {
 type Energized = bool;
 
 struct Floor {
-    floor: Array2D<(Tile, Energized, Vec<Direction>)>,
+    floor: Array2D<(Tile, Energized, HashSet<Direction>)>,
 }
 
 impl Floor {
@@ -128,7 +128,7 @@ impl Floor {
             .lines()
             .map(|line| {
                 line.chars()
-                    .map(|c| (Tile::from(c), false, Vec::new()))
+                    .map(|c| (Tile::from(c), false, HashSet::new()))
                     .collect()
             })
             .collect::<Vec<_>>();
@@ -139,30 +139,31 @@ impl Floor {
     }
 
     fn walk_start(&mut self) {
-        self.walk(Position(0, 0), Direction::Right)
+        let mut queue = vec![(Position(0, 0), Direction::Right)];
+        while let Some((pos, dir)) = queue.pop() {
+            let new_dirs = self.walk(pos, dir);
+            queue.extend(new_dirs);
+        }
     }
 
-    fn walk(&mut self, pos: Position, dir: Direction) {
+    fn walk(&mut self, pos: Position, dir: Direction) -> Vec<(Position, Direction)> {
         let tile = self.floor.get_mut(pos.0, pos.1);
         if tile.is_none() {
             //reached end of floor
-            return;
+            return Vec::new();
         }
         let (tile, energized, walked_dirs) = tile.unwrap();
         if walked_dirs.contains(&dir) {
             //already walked this way
-            return;
+            return Vec::new();
         }
 
-        println!("{pos:?}, Tile: {tile:?} {dir:?}");
+        // println!("{pos:?}, Tile: {tile:?} {dir:?}");
 
-        walked_dirs.push(dir);
+        walked_dirs.insert(dir);
         *energized = true;
 
-        let new_dirs = tile.walk(pos, dir);
-        new_dirs.into_iter().for_each(|(pos, dir)| {
-            self.walk(pos, dir);
-        });
+        tile.walk(pos, dir)
     }
 
     fn get_energized(&self) -> usize {
