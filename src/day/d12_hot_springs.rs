@@ -1,6 +1,8 @@
 // TODO remove these
-#![allow(dead_code)]
-#![allow(unused)]
+// #![allow(dead_code)]
+// #![allow(unused)]
+
+use std::collections::VecDeque;
 
 use crate::prelude::*;
 
@@ -40,26 +42,12 @@ struct Group {
 }
 
 impl Group {
-    /// checks if a group of cnt damaged pipes would fit in this group
-    fn could_contain(&self, cnt: usize) -> bool {
-        let len = self.springs.len();
-        let damaged_cnt = self
-            .springs
-            .iter()
-            .filter(|&s| *s == Spring::Damaged)
-            .count();
-        len >= cnt && damaged_cnt >= cnt
-    }
 
-    fn reduce(&mut self, dmg_cnt: usize) -> Self {
-        todo!()
-    }
 }
 
 struct Record {
-    spring_groups: Vec<Group>,
-    damaged_group_size: Vec<usize>,
-    damaged_spring_count: usize,
+    springs: Vec<Spring>,
+    group_sizes: Vec<usize>,
 }
 
 impl Record {
@@ -67,26 +55,34 @@ impl Record {
         todo!()
     }
 
-    fn reduce(&mut self) -> bool {
-        for damaged_size in self.damaged_group_size.iter() {
-            let fittable_group = self
-                .spring_groups
-                .iter_mut()
-                .filter(|g| g.could_contain(*damaged_size))
-                .collect::<Vec<_>>();
+    fn split_first(springs: &[Spring]) -> (Vec<Spring>, Vec<Spring>) {
+        todo!()
+    }
 
-            let only_hit = fittable_group.len() == 1;
-            if only_hit {
-                // let mut group = fittable_group[0];
-                // let new_groups = group.reduce(*damaged_size);
-                // self.spring_groups.extend(new_groups);
-                return true;
-            }
-        }
+    fn get_possibilities(springs: &[Spring], group_size: usize) -> Vec<Vec<Spring>> {
+        todo!()
+    }
+
+    fn all_fits(springs: &[Spring], group_size: VecDeque<usize>) -> Vec<Vec<Spring>> {
+        let possibilities = Self::get_possibilities(springs, group_size[0]);
         todo!()
     }
 
     fn different_arrangements(&self) -> usize {
+        let mut groups = VecDeque::from(self.group_sizes.clone());
+        while let Some(group_size) = groups.pop_front() {
+            let fits = Self::all_fits(&self.springs, group_size);
+            
+        } 
+        for &group_size in self.damaged_group_size.iter() {
+            let fits = Self::all_fits(&self.springs, group_size);
+            for 
+
+
+        }
+
+
+
         //^\.*(\?*#{0,1})\.+(\?*#{0,1})\.+(\?*#{0,3})\.*$
         todo!("should be solveable with regex?");
         // for group_len in &self.damaged_group_size {
