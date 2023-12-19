@@ -78,6 +78,10 @@ fn main() -> Result<()> {
     println!("Day 15.1: {}", d15_lens_library::cal_hash_sum(&input)?); 
     println!("Day 15.2: {}", d15_lens_library::cal_focus_power(&input)?); 
 
+    let input = read_file("input/16.txt")?;
+    println!("Day 16.1: {}", d16_the_floor_will_be_lava::cal_energized_tiles(&input)?); 
+    // println!("Day 16.2: {}", d15_lens_library::cal_focus_power(&input)?); 
+
     Ok(())
 }
 
