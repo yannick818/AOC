@@ -26,7 +26,13 @@ fn test_sum_accepted() {
     assert_eq!(19114, cal_sum_accepted(INPUT).unwrap());
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[test]
+fn test_sum_accepted2() {
+    todo!("too slow to test");
+    // assert_eq!(167409079868000, cal_all_possibilities(INPUT).unwrap());
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 struct Part {
     component: [usize; 4],
 }
@@ -202,6 +208,35 @@ impl Workflow {
         }
         accepted
     }
+
+    fn get_combinations(&self) -> usize {
+        let mut accepted = 0;
+        let all_parts = (1..=4000).flat_map(|x| {
+            (1..=4000).flat_map(move |m| {
+                (1..=4000).flat_map(move |a| {
+                    (1..=4000).map(move |s| {
+                        let component = [x, m, a, s];
+                        Part { component }
+                    })
+                })
+            })
+        });
+        for part in all_parts {
+            println!("{:?}", part);
+            let mut rules = self.rules.get("in").unwrap();
+            loop {
+                match Rule::apply_all(rules, &part) {
+                    RuleResult::Approved => {
+                        accepted += 1;
+                        break;
+                    }
+                    RuleResult::Rejected => break,
+                    RuleResult::Rule(name) => rules = self.rules.get(&name).unwrap(),
+                }
+            }
+        }
+        accepted
+    }
 }
 
 pub fn cal_sum_accepted(input: &str) -> Result<usize> {
@@ -209,4 +244,10 @@ pub fn cal_sum_accepted(input: &str) -> Result<usize> {
     let accepted = workflow.get_accepted();
     let sum = accepted.into_iter().map(|p| p.sum()).sum();
     Ok(sum)
+}
+
+pub fn cal_all_possibilities(input: &str) -> Result<usize> {
+    let workflow = Workflow::parse(input);
+    let comb = workflow.get_combinations();
+    Ok(comb)
 }

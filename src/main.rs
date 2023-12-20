@@ -99,8 +99,8 @@ fn main() -> Result<()> {
     // println!("Day 18.2: {}", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
 
     let input = read_file("input/19.txt")?;
-    println!("Day 19.1: {}", d19_aplenty::cal_sum_accepted(&input)?); 
-    // println!("Day 19.2: {}", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
+    measure!("19.1", d19_aplenty::cal_sum_accepted(&input)?); 
+    // measure!("19.2", d19_aplenty::cal_all_possibilities(&input)?); 
 
     Ok(())
 }
