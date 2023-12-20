@@ -74,8 +74,8 @@ fn main() -> Result<()> {
     measure!("11.1", d11_cosmic_expansion::cal_sum_of_paths(&input, 1)?); 
     measure!("11.2", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
 
-    // let input = read_file("input/12.txt")?;
-    // measure!("12.1", d12_hot_springs::cal_arrangement_sum(&input)?); 
+    let input = read_file("input/12.txt")?;
+    measure!("12.1", d12_hot_springs::cal_arrangement_sum(&input)?); //8603 too high
     // measure!("12.2", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
 
     let input = read_file("input/13.txt")?;

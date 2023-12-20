@@ -246,6 +246,7 @@ pub fn cal_sum_accepted(input: &str) -> Result<usize> {
     Ok(sum)
 }
 
+#[allow(dead_code)]
 pub fn cal_all_possibilities(input: &str) -> Result<usize> {
     let workflow = Workflow::parse(input);
     let comb = workflow.get_combinations();

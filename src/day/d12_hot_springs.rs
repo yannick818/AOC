@@ -1,6 +1,4 @@
-// TODO implement D12
-#![allow(dead_code)]
-#![allow(unused)]
+use std::{collections::VecDeque, fmt::Debug};
 
 use crate::prelude::*;
 
@@ -17,7 +15,13 @@ fn test_cal_arrangement_sum() {
     assert_eq!(21, cal_arrangement_sum(INPUT).unwrap());
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[test]
+fn test_cal_arrangement_sum2() {
+    let input = "????????#?#????#.?? 1,1,7,1,1";
+    cal_arrangement_sum(input).unwrap(); //45?
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
 enum Spring {
     Operational,
     Damaged,
@@ -35,69 +39,96 @@ impl From<char> for Spring {
     }
 }
 
-struct Group {
-    springs: Vec<Spring>,
-}
-
-impl Group {
-    /// checks if a group of cnt damaged pipes would fit in this group
-    fn could_contain(&self, cnt: usize) -> bool {
-        let len = self.springs.len();
-        let damaged_cnt = self
-            .springs
-            .iter()
-            .filter(|&s| *s == Spring::Damaged)
-            .count();
-        len >= cnt && damaged_cnt >= cnt
-    }
-
-    fn reduce(&mut self, dmg_cnt: usize) -> Self {
-        todo!()
+impl Debug for Spring {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Operational => write!(f, "."),
+            Self::Damaged => write!(f, "#"),
+            Self::Unknown => write!(f, "?"),
+        }
     }
 }
 
 struct Record {
-    spring_groups: Vec<Group>,
-    damaged_group_size: Vec<usize>,
-    damaged_spring_count: usize,
+    springs: Vec<Spring>,
+    group_sizes: Vec<usize>,
 }
 
 impl Record {
     fn parse(input: &str) -> Vec<Record> {
-        todo!()
+        input
+            .lines()
+            .map(|line| {
+                let (springs, sizes) = line.split_once(' ').unwrap();
+                let springs = springs.chars().map(Spring::from).collect();
+                let group_sizes = sizes.split(',').map(|num| num.parse().unwrap()).collect();
+                Self {
+                    springs,
+                    group_sizes,
+                }
+            })
+            .collect()
     }
 
-    fn reduce(&mut self) -> bool {
-        for damaged_size in self.damaged_group_size.iter() {
-            let fittable_group = self
-                .spring_groups
-                .iter_mut()
-                .filter(|g| g.could_contain(*damaged_size))
-                .collect::<Vec<_>>();
+    fn get_remaining(springs: &[Spring], group_size: usize) -> Vec<Vec<Spring>> {
+        println!("find {} in {:?}", group_size, springs);
+        let mut possibilities = Vec::new();
+        if springs.len() < group_size {
+            return possibilities;
+        }
+        for pos in 0..=(springs.len() - group_size) {
+            let mut previous = springs.iter().take(pos);
+            let mut relevant = springs.iter().skip(pos).take(group_size);
+            let next = springs.get(pos + group_size);
 
-            let only_hit = fittable_group.len() == 1;
-            if only_hit {
-                // let mut group = fittable_group[0];
-                // let new_groups = group.reduce(*damaged_size);
-                // self.spring_groups.extend(new_groups);
-                return true;
+            let prev_ok = previous.all(|&spring| spring != Spring::Damaged);
+            let relevant_ok = relevant.all(|&spring| spring != Spring::Operational);
+            let next_ok = match next {
+                Some(&spring) => spring != Spring::Damaged,
+                None => true,
+            };
+
+            if prev_ok && relevant_ok && next_ok {
+                let remaining = springs
+                    .iter()
+                    .cloned()
+                    // +1 bc the next spring is the placeholder between groups
+                    .skip(pos + group_size + 1)
+                    .collect::<Vec<_>>();
+                possibilities.push(remaining);
             }
         }
-        todo!()
+        possibilities
+    }
+
+    fn count_fits(springs: &[Spring], mut group_size: VecDeque<usize>) -> usize {
+        // println!("find {:?} in {:?}", group_size, springs);
+        if group_size.is_empty() {
+            return 1;
+        }
+        let size = group_size.pop_front().unwrap();
+        let remaining_springs = Self::get_remaining(springs, size);
+        remaining_springs
+            .into_iter()
+            .map(|remaining| Self::count_fits(&remaining, group_size.clone()))
+            .sum()
     }
 
     fn different_arrangements(&self) -> usize {
-        //^\.*(\?*#{0,1})\.+(\?*#{0,1})\.+(\?*#{0,3})\.*$
-        todo!("should be solveable with regex?");
-        // for group_len in &self.damaged_group_size {
-        //     // self.spring_groups.iter()
-        //     // .fi
-        //     for group in &self.spring_groups {
-        //         if group.could_contain(*group_len) {
-        //             todo!()
-        //         }
-        //     }
-        // }
+        let groups = VecDeque::from(self.group_sizes.clone());
+        let cnt = Self::count_fits(&self.springs, groups);
+        let groups = format!("{:?}", self.group_sizes);
+        let springs = self
+            .springs
+            .iter()
+            .map(|spring| match spring {
+                Spring::Operational => '.',
+                Spring::Damaged => '#',
+                Spring::Unknown => '?',
+            })
+            .collect::<String>();
+        println!("{:>20} fits in {:>20} {} ways", groups, springs, cnt);
+        cnt
     }
 }
 
