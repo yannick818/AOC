@@ -16,9 +16,10 @@ fn test_cal_arrangement_sum() {
 }
 
 #[test]
-fn test_cal_arrangement_sum2() {
-    let input = "????????#?#????#.?? 1,1,7,1,1";
-    cal_arrangement_sum(input).unwrap(); //45?
+fn test_cal_arrangement_sum_check_last
+() {
+    let input = ".#.?.#.# 1,1,1";
+    assert_eq!(1, cal_arrangement_sum(input).unwrap());
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -70,8 +71,8 @@ impl Record {
             .collect()
     }
 
-    fn get_remaining(springs: &[Spring], group_size: usize) -> Vec<Vec<Spring>> {
-        println!("find {} in {:?}", group_size, springs);
+    fn get_remaining(springs: &[Spring], group_size: usize, last: bool) -> Vec<Vec<Spring>> {
+        // println!("find {} in {:?}", group_size, springs);
         let mut possibilities = Vec::new();
         if springs.len() < group_size {
             return possibilities;
@@ -80,6 +81,8 @@ impl Record {
             let mut previous = springs.iter().take(pos);
             let mut relevant = springs.iter().skip(pos).take(group_size);
             let next = springs.get(pos + group_size);
+            let mut rest = springs.iter().skip(pos + group_size + 1);
+
 
             let prev_ok = previous.all(|&spring| spring != Spring::Damaged);
             let relevant_ok = relevant.all(|&spring| spring != Spring::Operational);
@@ -87,8 +90,9 @@ impl Record {
                 Some(&spring) => spring != Spring::Damaged,
                 None => true,
             };
+            let rest_ok = !last || rest.all(|&spring| spring != Spring::Damaged);
 
-            if prev_ok && relevant_ok && next_ok {
+            if prev_ok && relevant_ok && next_ok && rest_ok {
                 let remaining = springs
                     .iter()
                     .cloned()
@@ -106,28 +110,30 @@ impl Record {
         if group_size.is_empty() {
             return 1;
         }
+        let last = group_size.len() == 1;
         let size = group_size.pop_front().unwrap();
-        let remaining_springs = Self::get_remaining(springs, size);
+        let remaining_springs = Self::get_remaining(springs, size, last);
         remaining_springs
             .into_iter()
             .map(|remaining| Self::count_fits(&remaining, group_size.clone()))
             .sum()
     }
 
+    #[allow(clippy::let_and_return)]
     fn different_arrangements(&self) -> usize {
         let groups = VecDeque::from(self.group_sizes.clone());
         let cnt = Self::count_fits(&self.springs, groups);
-        let groups = format!("{:?}", self.group_sizes);
-        let springs = self
-            .springs
-            .iter()
-            .map(|spring| match spring {
-                Spring::Operational => '.',
-                Spring::Damaged => '#',
-                Spring::Unknown => '?',
-            })
-            .collect::<String>();
-        println!("{:>20} fits in {:>20} {} ways", groups, springs, cnt);
+        // let groups = format!("{:?}", self.group_sizes);
+        // let springs = self
+        //     .springs
+        //     .iter()
+        //     .map(|spring| match spring {
+        //         Spring::Operational => '.',
+        //         Spring::Damaged => '#',
+        //         Spring::Unknown => '?',
+        //     })
+        //     .collect::<String>();
+        // println!("{:>20} fits in {:>20} {} ways", groups, springs, cnt);
         cnt
     }
 }
