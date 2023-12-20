@@ -14,14 +14,16 @@ macro_rules! measure {
         let start = Instant::now();
         let result = $func;
         let duration = start.elapsed();
-        let time = if duration.as_secs() > 1 {
-            format!("{} s ", duration.as_secs())
+        let time = if duration.as_secs() / 60 > 1 {
+            format!("{} min", duration.as_secs())
+        } else if duration.as_secs() > 1 {
+            format!("{} s  ", duration.as_secs())
         } else if duration.as_millis() > 1 {
-            format!("{} ms", duration.as_millis())
+            format!("{} ms ", duration.as_millis())
         } else if duration.as_micros() > 1 {
-            format!("{} us", duration.as_micros())
+            format!("{} us ", duration.as_micros())
         } else {
-            format!("{} ns", duration.as_nanos())
+            format!("{} ns ", duration.as_nanos())
         };
         println!("Day {:>4} in {:>8}: {}", $title, time, result);
     }};
@@ -47,7 +49,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/5.txt")?;
     measure!("5.1", d5_fertilizer::cal_lowest_location(&input)?);
-    //30s with par_iter, 115s without 
+    //30s with par_iter, 115s without on MacAir M1
     // measure!("5.2", d5_fertilizer::cal_lowest_loc_ranges(&input)?);
 
     let input = read_file("input/6.txt")?;
@@ -75,8 +77,9 @@ fn main() -> Result<()> {
     measure!("11.2", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
 
     let input = read_file("input/12.txt")?;
-    measure!("12.1", d12_hot_springs::cal_arrangement_sum(&input)?); //8603 too high
-    // measure!("12.2", d11_cosmic_expansion::cal_sum_of_paths(&input, 1_000_000)?); 
+    measure!("12.1", d12_hot_springs::cal_arrangement_sum(&input)?); 
+    // to slow
+    // measure!("12.2", d12_hot_springs::cal_arrangement_sum_folded(&input)?); 
 
     let input = read_file("input/13.txt")?;
     measure!("13.1", d13_point_of_incidence::cal_reflection_code(&input)?); 
