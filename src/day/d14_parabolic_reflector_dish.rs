@@ -24,8 +24,7 @@ fn test_total_load() {
 
 #[test]
 fn test_total_load2() {
-    todo!("To slow to test");
-    // assert_eq!(64, cal_load_after(INPUT, 1_000_000_000).unwrap());
+    assert_eq!(64, cal_load_after(INPUT, 1_000_000_000).unwrap());
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -165,13 +164,23 @@ pub fn cal_total_load(input: &str) -> Result<usize> {
     Ok(load)
 }
 
-//TODO Implement D14.2
-#[allow(dead_code)]
 pub fn cal_load_after(input: &str, rounds: usize) -> Result<usize> {
     let mut platform = Platrom::from(input);
-    for i in 0..rounds {
-        println!("Round {}", i);
-        // let start = platform.clone();
+    let mut seen = Vec::new();
+    for i in 0..=rounds {
+        if let Some(pos) = seen.iter().position(|seen| seen == &platform) {
+            let loop_len = i - pos;
+            let remaining = (rounds - pos) % loop_len;
+            for _ in 0..remaining {
+                platform.tilt(Direction::Up);
+                platform.tilt(Direction::Left);
+                platform.tilt(Direction::Down);
+                platform.tilt(Direction::Right);
+            }
+            break;
+        }
+        seen.push(platform.clone());
+        // println!("Round {}", i);
         // println!("{:?}", platform);
         platform.tilt(Direction::Up);
         // println!("{:?}", platform);
@@ -182,9 +191,6 @@ pub fn cal_load_after(input: &str, rounds: usize) -> Result<usize> {
         platform.tilt(Direction::Right);
         // println!("{:?}", platform);
         // println!("-----------------------");
-        // if start == platform {
-        //     break;
-        // }
     }
     let load = platform.cal_load();
     Ok(load)
