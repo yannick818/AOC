@@ -78,8 +78,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/12.txt")?;
     measure!("12.1", d12_hot_springs::cal_arrangement_sum(&input)?); 
-    // to slow
-    // measure!("12.2", d12_hot_springs::cal_arrangement_sum_folded(&input)?); 
+    measure!("12.2", d12_hot_springs::cal_arrangement_sum_folded(&input)?); 
 
     let input = read_file("input/13.txt")?;
     measure!("13.1", d13_point_of_incidence::cal_reflection_code(&input)?); 

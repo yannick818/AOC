@@ -1,4 +1,4 @@
-use std::{fmt::Debug, time::Instant};
+use std::{collections::HashMap, fmt::Debug};
 
 // TODO Day 12.2 Speed improvement
 #[allow(unused_imports)]
@@ -104,22 +104,30 @@ impl Record {
             .collect()
     }
 
-    // crazy... https://github.com/Domyy95/Challenges/blob/master/2023-12-Advent-of-code/12.py this runs in just a blink  
-    //@cache stores input and outputs and reuses them
-    // without a cache 
-    fn count_fits(springs: &[Spring], sizes: &[usize]) -> usize {
+    // crazy... https://github.com/Domyy95/Challenges/blob/master/2023-12-Advent-of-code/12.py this runs in just a blink
+    // @cache stores input and outputs and reuses them
+    // without a cache this function needs multible hours
+    fn count_fits(
+        springs: &[Spring],
+        sizes: &[usize],
+        cache: &mut HashMap<(usize, usize), usize>,
+    ) -> usize {
         // println!("find {:?} in {:?}", sizes, springs);
         match (springs.is_empty(), sizes.is_empty()) {
-            (false, false) => {},
+            (false, false) => {}
             (true, true) => return 1,
             (true, false) => return 0,
             (false, true) => {
                 if springs.contains(&Spring::Damaged) {
-                    return 0
+                    return 0;
                 } else {
-                    return 1
+                    return 1;
                 }
             }
+        }
+
+        if let Some(count) = cache.get(&(springs.len(), sizes.len())) {
+            return *count;
         }
 
         let mut sum = 0;
@@ -127,7 +135,7 @@ impl Record {
 
         if *first != Spring::Damaged {
             // treat first spring as functional
-            sum += Self::count_fits(&springs[1..], sizes);
+            sum += Self::count_fits(&springs[1..], sizes, cache);
         }
         if *first != Spring::Operational {
             // try to fit group at start
@@ -142,21 +150,18 @@ impl Record {
                 };
                 if relevant_ok && next_ok {
                     let is_last = next.is_none();
-                    let start_index = if is_last {
-                        group_len
-                    } else {
-                        group_len + 1
-                    };
-                    sum += Self::count_fits(&springs[start_index..], &sizes[1..]);
+                    let start_index = if is_last { group_len } else { group_len + 1 };
+                    sum += Self::count_fits(&springs[start_index..], &sizes[1..], cache);
                 }
             }
         }
+        cache.insert((springs.len(), sizes.len()), sum);
         sum
     }
 
     #[allow(clippy::let_and_return)]
     fn different_arrangements(&self) -> usize {
-        let cnt = Self::count_fits(&self.springs, &self.group_sizes);
+        let cnt = Self::count_fits(&self.springs, &self.group_sizes, &mut HashMap::new());
         // let groups = format!("{:?}", self.group_sizes);
         // let springs = self
         //     .springs
@@ -179,19 +184,11 @@ pub fn cal_arrangement_sum(input: &str) -> Result<usize> {
     Ok(sum)
 }
 
-#[allow(dead_code)]
 pub fn cal_arrangement_sum_folded(input: &str) -> Result<usize> {
     let records = Record::parse(input, 5);
     let sum = records
-        .par_iter()
-        .enumerate()
-        .map(|(i, record)| {
-            let start = Instant::now();
-            let poss = record.different_arrangements();
-            let dur = start.elapsed();
-            println!("{}/1000? (in {} s): {}", i, dur.as_secs(), poss);
-            poss
-        })
+        .iter()
+        .map(|record| record.different_arrangements())
         .sum();
     Ok(sum)
 }
