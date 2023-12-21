@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Debug};
+use std::{fmt::Debug, time::Instant};
 
 // TODO Day 12.2 Speed improvement
 #[allow(unused_imports)]
@@ -28,6 +28,18 @@ fn test_arrangement_sum_check_last() {
 #[test]
 fn test_arrangement_sum_folded() {
     assert_eq!(525152, cal_arrangement_sum_folded(INPUT).unwrap());
+}
+
+#[test]
+#[should_panic]
+fn test_slices() {
+    let vec = vec![1, 2, 3];
+    let slice = &vec[..];
+    assert_eq!(slice.len(), 3);
+    assert_eq!(&slice[..3], slice); //works
+
+    let slice_large = &vec[..5]; //panics
+    assert_eq!(slice_large.len(), 3);
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -92,67 +104,59 @@ impl Record {
             .collect()
     }
 
-    fn get_remaining(springs: &[Spring], group_size: usize, remaining: usize) -> Vec<Vec<Spring>> {
-        // println!("find {} in {:?}", group_size, springs);
-        let mut possibilities = Vec::new();
-        if springs.len() < group_size {
-            return possibilities;
-        }
-        for pos in 0..=(springs.len() - group_size) {
-            // println!("{}", pos);
-            // previous cannot have a damaged spring
-            let mut previous = springs.iter().take(pos);
-            let prev_ok = previous.all(|&spring| spring != Spring::Damaged);
-            if !prev_ok {
-                // println!("prev {}", pos);
-                break;
-            }
-
-            let mut relevant = springs.iter().skip(pos).take(group_size);
-            let next = springs.get(pos + group_size);
-            let rest = springs.iter().skip(pos + group_size + 1);
-
-            let relevant_ok = relevant.all(|&spring| spring != Spring::Operational);
-            let next_ok = match next {
-                Some(&spring) => spring != Spring::Damaged,
-                None => true,
-            };
-            // rest cannot have too much damaged springs left
-            let rest_ok = remaining >= rest.clone().filter(|&&spring| spring == Spring::Damaged).count();
-            
-            // rest should have at enough ? and #
-            let rest_cnt = rest.clone().filter(|&&spring| spring != Spring::Operational).count();
-            if rest_cnt < remaining {
-                // println!("rest {}", pos);
-                break;
-            }
-
-            if prev_ok && relevant_ok && next_ok && rest_ok {
-                possibilities.push(rest.cloned().collect());
+    // crazy... https://github.com/Domyy95/Challenges/blob/master/2023-12-Advent-of-code/12.py this runs in just a blink  
+    //@cache stores input and outputs and reuses them
+    // without a cache 
+    fn count_fits(springs: &[Spring], sizes: &[usize]) -> usize {
+        // println!("find {:?} in {:?}", sizes, springs);
+        match (springs.is_empty(), sizes.is_empty()) {
+            (false, false) => {},
+            (true, true) => return 1,
+            (true, false) => return 0,
+            (false, true) => {
+                if springs.contains(&Spring::Damaged) {
+                    return 0
+                } else {
+                    return 1
+                }
             }
         }
-        possibilities
-    }
 
-    fn count_fits(springs: &[Spring], mut group_size: VecDeque<usize>) -> usize {
-        // println!("find {:?} in {:?}", group_size, springs);
-        if group_size.is_empty() {
-            return 1;
+        let mut sum = 0;
+        let first = springs.first().unwrap();
+
+        if *first != Spring::Damaged {
+            // treat first spring as functional
+            sum += Self::count_fits(&springs[1..], sizes);
         }
-        let size = group_size.pop_front().unwrap();
-        let remaining = group_size.iter().sum();
-        let remaining_springs = Self::get_remaining(springs, size, remaining);
-        remaining_springs
-            .into_iter()
-            .map(|remaining| Self::count_fits(&remaining, group_size.clone()))
-            .sum()
+        if *first != Spring::Operational {
+            // try to fit group at start
+            let group_len = sizes[0];
+            if springs.len() >= group_len {
+                let relevant = &springs[..group_len];
+                let next = springs.get(group_len);
+                let relevant_ok = !relevant.contains(&Spring::Operational);
+                let next_ok = match next {
+                    None => true,
+                    Some(next_spring) => next_spring != &Spring::Damaged,
+                };
+                if relevant_ok && next_ok {
+                    let is_last = next.is_none();
+                    let start_index = if is_last {
+                        group_len
+                    } else {
+                        group_len + 1
+                    };
+                    sum += Self::count_fits(&springs[start_index..], &sizes[1..]);
+                }
+            }
+        }
+        sum
     }
 
     #[allow(clippy::let_and_return)]
     fn different_arrangements(&self) -> usize {
-        let groups = VecDeque::from(self.group_sizes.clone());
-        // println!("test {:?} with {:?}", self.springs, self.group_sizes);
-        let cnt = Self::count_fits(&self.springs, groups);
+        let cnt = Self::count_fits(&self.springs, &self.group_sizes);
         // let groups = format!("{:?}", self.group_sizes);
         // let springs = self
         //     .springs
@@ -178,14 +182,16 @@ pub fn cal_arrangement_sum(input: &str) -> Result<usize> {
 #[allow(dead_code)]
 pub fn cal_arrangement_sum_folded(input: &str) -> Result<usize> {
     let records = Record::parse(input, 5);
-    let len = records.len();
-    let mut cnt = 0;
-    let mut sum = 0;
-    for record in records.iter() {
-        let poss = record.different_arrangements();
-        sum += poss;
-        cnt += 1;
-        println!("{}/{}: {}", cnt, len, poss);    
-    }
+    let sum = records
+        .par_iter()
+        .enumerate()
+        .map(|(i, record)| {
+            let start = Instant::now();
+            let poss = record.different_arrangements();
+            let dur = start.elapsed();
+            println!("{}/1000? (in {} s): {}", i, dur.as_secs(), poss);
+            poss
+        })
+        .sum();
     Ok(sum)
 }
