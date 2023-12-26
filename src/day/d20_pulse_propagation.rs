@@ -82,20 +82,25 @@ impl Module {
                 let name = "broadcaster".to_owned();
                 (typ, name)
             }
-            label => if let Some(name) = label.strip_prefix('%') {
-                let typ = ModuleTyp::FlipFlop;
-                let name = name.to_owned();
-                (typ, name)
-            } else if let Some(name) = label.strip_prefix('&') {
-                let typ = ModuleTyp::Conjunction(Vec::new());
-                let name = name.to_owned();
-                (typ, name)
-            } else {
-                panic!("Invalid module type: {}", typ)
+            label => {
+                if let Some(name) = label.strip_prefix('%') {
+                    let typ = ModuleTyp::FlipFlop;
+                    let name = name.to_owned();
+                    (typ, name)
+                } else if let Some(name) = label.strip_prefix('&') {
+                    let typ = ModuleTyp::Conjunction(Vec::new());
+                    let name = name.to_owned();
+                    (typ, name)
+                } else {
+                    panic!("Invalid module type: {}", typ)
+                }
             }
         };
 
-        let targets = targets.split(", ").map(|s| s.to_owned()).collect::<Vec<_>>();
+        let targets = targets
+            .split(", ")
+            .map(|s| s.to_owned())
+            .collect::<Vec<_>>();
         let module = Self {
             typ,
             name: name.clone(),
@@ -134,37 +139,43 @@ struct Machine {
 }
 
 impl Machine {
-    fn push_button(&mut self, pushes: usize) {
+    fn push_button(&mut self, pushes: usize) -> Option<usize> {
         let mut queue = Queue::new();
-        let mut seen = Vec::new();
-        let mut counts = Vec::new(); 
-        let mut count = (0, 0);
+        // let mut seen = Vec::new();
+        // let mut counts = Vec::new();
+        let mut rec_rx = None;
         let mut state = self
             .modules
             .keys()
             .map(|name| (name.clone(), Pulse::Low))
             .collect::<State>();
         for round in 0..pushes {
-            if let Some(start) = seen.iter().position(|seen| *seen == state) {
+            // if let Some(start) = seen.iter().position(|seen| *seen == state) {
                 // println!("Loop detected at round {}", round);
-                let loop_len = round - start;
-                let loop_start: (usize, usize) = counts[start];
-                let loop_delta = (self.low_pulses - loop_start.0, self.high_pulses - loop_start.1);
-                let loop_count = (pushes - start) / loop_len;
+                // let loop_len = round - start;
+                // let loop_start: (usize, usize) = counts[start];
+                // let loop_delta = (
+                    // self.low_pulses - loop_start.0,
+                    // self.high_pulses - loop_start.1,
+                // );
+                // let loop_count = (pushes - start) / loop_len;
 
-                let remaining = (pushes - start) % loop_len;
-                let remaining_end = counts[start + remaining];
-                let remaining_delta = (remaining_end.0 - loop_start.0, remaining_end.1 - loop_start.1);
+                // let remaining = (pushes - start) % loop_len;
+                // let remaining_end = counts[start + remaining];
+                // let remaining_delta = (
+                    // remaining_end.0 - loop_start.0,
+                    // remaining_end.1 - loop_start.1,
+                // );
 
-                self.low_pulses = loop_start.0 + loop_delta.0 * loop_count + remaining_delta.0;
-                self.high_pulses = loop_start.1 + loop_delta.1 * loop_count + remaining_delta.1;
+                // self.low_pulses = loop_start.0 + loop_delta.0 * loop_count + remaining_delta.0;
+                // self.high_pulses = loop_start.1 + loop_delta.1 * loop_count + remaining_delta.1;
 
-                break;
-            }
+                // break;
+            // }
 
-            seen.push(state.clone());
-            // println!("State: {:#?}", state);
-            counts.push(count);
+            // seen.push(state.clone());
+            // // println!("State: {:#?}", state);
+            // counts.push(self.get_pulses());
 
             queue.push_back(("broadcaster".to_owned(), Pulse::Low));
             while let Some((name, pulse)) = queue.pop_front() {
@@ -174,12 +185,17 @@ impl Machine {
                 }
                 if let Some(module) = self.modules.get_mut(&name) {
                     module.send_pulse(pulse, &mut queue, &mut state);
+                } else if "rx" == name  {
+                    if pulse == Pulse::Low && rec_rx.is_none() {
+                        println!("RX LOW at round {}", round);
+                        rec_rx = Some(round);
+                    } else {
+                        // println!("RX HIGH at round {}", round);
+                    }
                 }
             }
-
-            count = self.get_pulses();
-
         }
+        rec_rx
     }
 
     fn get_pulses(&self) -> (usize, usize) {
@@ -189,9 +205,7 @@ impl Machine {
 
 impl From<&str> for Machine {
     fn from(input: &str) -> Self {
-        let mut modules = input.lines()
-        .map(Module::parse)
-        .collect::<HashMap<_, _>>();
+        let mut modules = input.lines().map(Module::parse).collect::<HashMap<_, _>>();
 
         let conjunctions = modules
             .iter()
@@ -213,7 +227,7 @@ impl From<&str> for Machine {
                 panic!("Invalid module type");
             }
         }
-        
+
         Self {
             modules,
             low_pulses: 0,
@@ -227,4 +241,12 @@ pub fn cal_pulses(input: &str) -> Result<usize> {
     machine.push_button(1000);
     let (lows, highs) = machine.get_pulses();
     Ok(lows * highs)
+}
+
+//TODO too slow
+#[allow(dead_code)]
+pub fn cal_rx_pushes(input: &str) -> Result<usize> {
+    let mut machine = Machine::from(input);
+    let rx = machine.push_button(1_000_000);
+    Ok(rx.unwrap())
 }

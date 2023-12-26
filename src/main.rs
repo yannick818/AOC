@@ -105,8 +105,8 @@ fn main() -> Result<()> {
     // measure!("19.2", d19_aplenty::cal_all_possibilities(&input)?); 
 
     let input = read_file("input/20.txt")?;
-    measure!("20.1", d20_pulse_propagation::cal_pulses(&input)?); //621702971 is to low 
-    // measure!("20.2", d16_the_floor_will_be_lava::cal_max_energized_tiles(&input)?); 
+    measure!("20.1", d20_pulse_propagation::cal_pulses(&input)?);  
+    // measure!("20.2", d20_pulse_propagation::cal_rx_pushes(&input)?); 
 
     Ok(())
 }
