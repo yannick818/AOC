@@ -107,6 +107,10 @@ fn main() -> Result<()> {
     let input = read_file("input/20.txt")?;
     measure!("20.1", d20_pulse_propagation::cal_pulses(&input)?);  
     // measure!("20.2", d20_pulse_propagation::cal_rx_pushes(&input)?); 
+    
+    let input = read_file("input/21.txt")?;
+    measure!("21.1", d21_step_counter::cal_plot_count(&input, 64)?);  
+    // measure!("21.2", d20_pulse_propagation::cal_rx_pushes(&input)?); 
 
     Ok(())
 }
