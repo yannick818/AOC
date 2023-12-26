@@ -56,9 +56,12 @@ impl Module {
                     .map(|name| states.get(name).unwrap())
                     .all(|&pulse| pulse == Pulse::High);
 
+                let state = states.get_mut(&self.name).unwrap();
                 if all_high {
+                    *state = Pulse::Low;
                     Some(Pulse::Low)
                 } else {
+                    *state = Pulse::High;
                     Some(Pulse::High)
                 }
             }
@@ -103,7 +106,7 @@ impl Module {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum Pulse {
     High,
     Low,
@@ -142,16 +145,16 @@ impl Machine {
             .map(|name| (name.clone(), Pulse::Low))
             .collect::<State>();
         for round in 0..pushes {
-            if let Some(pos) = seen.iter().position(|seen| seen == &state) {
-                println!("Loop detected at round {}", round);
-                let loop_len = round - pos;
-                let loop_start: (usize, usize) = counts[pos];
+            if let Some(start) = seen.iter().position(|seen| *seen == state) {
+                // println!("Loop detected at round {}", round);
+                let loop_len = round - start;
+                let loop_start: (usize, usize) = counts[start];
                 let loop_delta = (self.low_pulses - loop_start.0, self.high_pulses - loop_start.1);
-                let loop_count = (pushes - pos) / loop_len;
+                let loop_count = (pushes - start) / loop_len;
 
-                let remaining = (pushes - pos) % loop_len;
-                let remaining_end = counts[pos + remaining];
-                let remaining_delta = (loop_start.0 - remaining_end.0, loop_start.1 - remaining_end.1);
+                let remaining = (pushes - start) % loop_len;
+                let remaining_end = counts[start + remaining];
+                let remaining_delta = (remaining_end.0 - loop_start.0, remaining_end.1 - loop_start.1);
 
                 self.low_pulses = loop_start.0 + loop_delta.0 * loop_count + remaining_delta.0;
                 self.high_pulses = loop_start.1 + loop_delta.1 * loop_count + remaining_delta.1;
@@ -160,6 +163,7 @@ impl Machine {
             }
 
             seen.push(state.clone());
+            // println!("State: {:#?}", state);
             counts.push(count);
 
             queue.push_back(("broadcaster".to_owned(), Pulse::Low));
