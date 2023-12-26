@@ -1,9 +1,5 @@
 use std::{collections::HashMap, fmt::Debug};
 
-// TODO Day 12.2 Speed improvement
-#[allow(unused_imports)]
-use rayon::prelude::*;
-
 use crate::prelude::*;
 
 #[allow(dead_code)]
@@ -33,6 +29,7 @@ fn test_arrangement_sum_folded() {
 #[test]
 #[should_panic]
 fn test_slices() {
+    #[allow(clippy::useless_vec)]
     let vec = vec![1, 2, 3];
     let slice = &vec[..];
     assert_eq!(slice.len(), 3);
@@ -106,7 +103,7 @@ impl Record {
 
     // crazy... https://github.com/Domyy95/Challenges/blob/master/2023-12-Advent-of-code/12.py this runs in just a blink
     // @cache stores input and outputs and reuses them
-    // without a cache this function needs multible hours
+    // without a cache Day 12.2 needs multible hours
     fn count_fits(
         springs: &[Spring],
         sizes: &[usize],
