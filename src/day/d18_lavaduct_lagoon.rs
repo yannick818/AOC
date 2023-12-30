@@ -76,6 +76,7 @@ impl DigStep {
     }
 }
 
+//TODO this is isize, bc digging to the left ist possible
 type Row = usize;
 type Column = usize;
 

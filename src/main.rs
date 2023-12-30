@@ -112,6 +112,10 @@ fn main() -> Result<()> {
     measure!("21.1", d21_step_counter::cal_plot_count(&input, 64)?);  
     // measure!("21.2", d21_step_counter::cal_plot_count_extending(&input, 26501365)?); 
 
+    let input = read_file("input/22.txt")?;
+    measure!("22.1", d22_sand_slabs::cal_loose_bricks(&input)?);  
+    // measure!("22.2", d21_step_counter::cal_plot_count_extending(&input, 26501365)?); 
+
     Ok(())
 }
 
