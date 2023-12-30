@@ -116,6 +116,10 @@ fn main() -> Result<()> {
     measure!("22.1", d22_sand_slabs::cal_loose_bricks(&input)?);  
     measure!("22.2", d22_sand_slabs::cal_falling_bricks(&input)?); 
 
+    let input = read_file("input/23.txt")?;
+    measure!("23.1", d23_a_long_walk::cal_longest_hike(&input)?);  
+    // measure!("23.2", d20_pulse_propagation::cal_rx_pushes(&input)?); 
+
     Ok(())
 }
 

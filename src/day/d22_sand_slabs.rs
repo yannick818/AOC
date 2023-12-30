@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fmt::Display};
+use std::{collections::{HashSet, HashMap}, fmt::Display};
 
 use crate::prelude::*;
 
@@ -178,20 +178,24 @@ impl Pile {
         loose
     }
 
+    #[allow(clippy::let_and_return)]
     fn get_falling(&self) -> Vec<usize> {
         self.touching
             .iter()
             .enumerate()
             .map(|(id, _)| {
-                let falling = self.cal_falling(id, &mut HashSet::new());
+                let falling = self.cal_falling(id, &mut HashSet::new(), &mut HashMap::new());
                 // println!("brick {} falls {}", id, falling);
                 falling
             })
             .collect()
     }
 
-    // HACK this would be easy to cache
-    fn cal_falling(&self, id: BrickId, falling: &mut HashSet<BrickId>) -> usize {
+    // cache 1800ms -> 200ms
+    fn cal_falling(&self, id: BrickId, falling: &mut HashSet<BrickId>, cache: &mut HashMap<BrickId, usize>) -> usize {
+        if let Some(falling) = cache.get(&id) {
+            return *falling;
+        }
         falling.insert(id);
         let over = &self.touching.get(id).unwrap().1;
         let mut new_fallings = Vec::new();
@@ -204,9 +208,10 @@ impl Pile {
             }
         }
         for overid in new_fallings {
-            self.cal_falling(overid, falling); 
+            self.cal_falling(overid, falling, cache); 
         }
         let falling_wo_self = falling.len() - 1;
+        cache.insert(id, falling_wo_self);
         // println!("  brick {} falls {}", id, falling_wo_self);
         falling_wo_self
     }
