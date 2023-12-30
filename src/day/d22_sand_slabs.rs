@@ -2,9 +2,8 @@ use std::{collections::HashSet, fmt::Display};
 
 use crate::prelude::*;
 
-#[test]
-fn test_loose_bricks() {
-    let input = "1,0,1~1,2,1
+#[allow(dead_code)]
+const INPUT: &str = "1,0,1~1,2,1
 0,0,2~2,0,2
 0,2,3~2,2,3
 0,0,4~0,2,4
@@ -12,7 +11,14 @@ fn test_loose_bricks() {
 0,1,6~2,1,6
 1,1,8~1,1,9";
 
-    assert_eq!(cal_loose_bricks(input).unwrap(), 5);
+#[test]
+fn test_loose_bricks() {
+    assert_eq!(cal_loose_bricks(INPUT).unwrap(), 5);
+}
+
+#[test]
+fn test_fallings_bricks() {
+    assert_eq!(cal_falling_bricks(INPUT).unwrap(), 7);
 }
 
 type BrickId = usize;
@@ -159,7 +165,7 @@ impl Pile {
 
     fn get_loose(&self) -> Vec<BrickId> {
         let mut loose = Vec::new();
-        for (id, (under, over)) in self.touching.iter().enumerate() {
+        for (id, (_under, over)) in self.touching.iter().enumerate() {
             let all_stable = over.iter().all(|over_id| {
                 let mut other_under = self.touching.get(*over_id).unwrap().0.clone();
                 other_under.remove(&id);
@@ -171,6 +177,39 @@ impl Pile {
         }
         loose
     }
+
+    fn get_falling(&self) -> Vec<usize> {
+        self.touching
+            .iter()
+            .enumerate()
+            .map(|(id, _)| {
+                let falling = self.cal_falling(id, &mut HashSet::new());
+                // println!("brick {} falls {}", id, falling);
+                falling
+            })
+            .collect()
+    }
+
+    // HACK this would be easy to cache
+    fn cal_falling(&self, id: BrickId, falling: &mut HashSet<BrickId>) -> usize {
+        falling.insert(id);
+        let over = &self.touching.get(id).unwrap().1;
+        let mut new_fallings = Vec::new();
+        for overid in over {
+            let other_under = &self.touching.get(*overid).unwrap().0;
+            let is_falling = other_under.difference(falling).count() == 0;
+            if is_falling {
+                falling.insert(*overid);
+                new_fallings.push(*overid);
+            }
+        }
+        for overid in new_fallings {
+            self.cal_falling(overid, falling); 
+        }
+        let falling_wo_self = falling.len() - 1;
+        // println!("  brick {} falls {}", id, falling_wo_self);
+        falling_wo_self
+    }
 }
 
 pub fn cal_loose_bricks(input: &str) -> Result<usize> {
@@ -178,4 +217,11 @@ pub fn cal_loose_bricks(input: &str) -> Result<usize> {
     pile.fall();
     let loose = pile.get_loose();
     Ok(loose.len())
+}
+
+pub fn cal_falling_bricks(input: &str) -> Result<usize> {
+    let mut pile = Pile::new(input);
+    pile.fall();
+    let falling = pile.get_falling();
+    Ok(falling.iter().sum())
 }

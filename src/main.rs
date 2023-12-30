@@ -114,7 +114,7 @@ fn main() -> Result<()> {
 
     let input = read_file("input/22.txt")?;
     measure!("22.1", d22_sand_slabs::cal_loose_bricks(&input)?);  
-    // measure!("22.2", d21_step_counter::cal_plot_count_extending(&input, 26501365)?); 
+    measure!("22.2", d22_sand_slabs::cal_falling_bricks(&input)?); 
 
     Ok(())
 }
