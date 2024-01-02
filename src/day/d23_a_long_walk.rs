@@ -208,22 +208,14 @@ impl Trail {
     fn hike(self, ignore_slope: bool) -> usize {
         let mut max_path = 0;
         let mut queue = vec![self];
-        let mut cnt = 0;
-        let mut skipped = 0;
-        // let mut cache = HashSet::new();
         while let Some(trail) = queue.pop() {
-            println!("queue len {}", queue.len());
-            println!("cnt {}", cnt);
-            println!("skipped {}", skipped);
-            // println!("{:?}", trail);
+            
             if trail.get_max_possible_hike_len() <= max_path {
-                skipped += 1;
                 continue;
             }
 
             match trail.walk(ignore_slope) {
                 WalkResult::End(path_len) => {
-                    cnt += 1;
                     max_path = max_path.max(path_len);
                 }
                 WalkResult::Walked(mut paths) => queue.append(&mut paths),
@@ -233,17 +225,10 @@ impl Trail {
     }
 
     fn walk(self, ignore_slope: bool) -> WalkResult {
-        static mut GOAL: usize = 0;
-        static mut DEAD_END: usize = 0;
         let mut queue = vec![self];
         while let Some(trail) = queue.pop() {
             // println!("{:?}", trail);
             if trail.walk_pos == trail.end {
-                unsafe {
-                    GOAL += 1;
-                }
-                let ratio = unsafe { GOAL as f64 / DEAD_END as f64 };
-                // println!("ratio {}", ratio);
                 return WalkResult::End(trail.path_len);
             }
 
@@ -281,14 +266,8 @@ impl Trail {
                 .collect::<Vec<_>>();
 
             match new_trails.len() {
+                // dead end
                 0 => {
-                    // println!("DEAD END");
-                    // println!("{:?}", self);
-                    unsafe {
-                        DEAD_END += 1;
-                    }
-                    let ratio = unsafe { GOAL as f64 / DEAD_END as f64 };
-                    // println!("ratio {}", ratio);
                     return WalkResult::Walked(Vec::new());
                 }
                 // finish iterating simple path
@@ -320,9 +299,7 @@ impl Trail {
         while let Some(pos) = queue.pop() {
             // println!("{:?}", self);
             if pos == self.end {
-                // println!("DEAD END");
-                // println!("{:?}", self);
-                //FIXME its not the end bc a other dir might find the end, since good and is walking too
+                // dead end cannot walk to end bc other paths might find it
                 *self.trail.get_mut(pos.0, pos.1).unwrap() = Tile::Path(false);
                 return Some(self);
             }
@@ -381,11 +358,6 @@ impl Trail {
         while let Some(pos) = queue.pop() {
             self.end = pos;
             // println!("{:?}", self);
-            // if self.dead_pos == self.end {
-            //     // println!("DEAD END");
-            //     // println!("{:?}", self);
-            //     return None;
-            // }
             let possible_ways = enum_iterator::all::<Direction>()
                 .filter_map(|dir| self.end.walk(dir))
                 .filter(|pos| {
