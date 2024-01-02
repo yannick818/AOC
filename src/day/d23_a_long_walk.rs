@@ -186,40 +186,64 @@ impl Trail {
         }
     }
 
-    fn get_hike_len(mut self, ignore_slope: bool) -> Vec<usize> {
+    fn get_max_possible_hike_len(&self) -> usize {
+        let free_tiles = self
+            .trail
+            .elements_row_major_iter()
+            .filter(|tile| matches!(tile, Tile::Path(false) | Tile::Slope(false, _)))
+            .count();
+        free_tiles + self.path_len
+    }
+
+    fn get_hike_len(mut self, ignore_slope: bool) -> usize {
         *self
             .trail
             .get_mut(self.walk_pos.0, self.walk_pos.1)
             .unwrap() = Tile::Path(true);
+        *self.trail.get_mut(self.end.0, self.end.1).unwrap() = Tile::Path(true);
+        // self.path_len += 1;
         self.hike(ignore_slope)
     }
 
-    fn hike(self, ignore_slope: bool) -> Vec<usize> {
-        let mut path_lens = Vec::new();
+    fn hike(self, ignore_slope: bool) -> usize {
+        let mut max_path = 0;
         let mut queue = vec![self];
+        let mut cnt = 0;
+        let mut skipped = 0;
+        // let mut cache = HashSet::new();
         while let Some(trail) = queue.pop() {
             println!("queue len {}", queue.len());
-            println!("results len {}", path_lens.len());
+            println!("cnt {}", cnt);
+            println!("skipped {}", skipped);
+            // println!("{:?}", trail);
+            if trail.get_max_possible_hike_len() <= max_path {
+                skipped += 1;
+                continue;
+            }
+
             match trail.walk(ignore_slope) {
-                WalkResult::End(path_len) => path_lens.push(path_len),
+                WalkResult::End(path_len) => {
+                    cnt += 1;
+                    max_path = max_path.max(path_len);
+                }
                 WalkResult::Walked(mut paths) => queue.append(&mut paths),
             }
         }
-        path_lens
+        max_path
     }
 
     fn walk(self, ignore_slope: bool) -> WalkResult {
         static mut GOAL: usize = 0;
         static mut DEAD_END: usize = 0;
-        // println!("{:?}", self);
         let mut queue = vec![self];
         while let Some(trail) = queue.pop() {
+            // println!("{:?}", trail);
             if trail.walk_pos == trail.end {
                 unsafe {
                     GOAL += 1;
                 }
                 let ratio = unsafe { GOAL as f64 / DEAD_END as f64 };
-                println!("ratio {}", ratio);
+                // println!("ratio {}", ratio);
                 return WalkResult::End(trail.path_len);
             }
 
@@ -264,7 +288,7 @@ impl Trail {
                         DEAD_END += 1;
                     }
                     let ratio = unsafe { GOAL as f64 / DEAD_END as f64 };
-                    println!("ratio {}", ratio);
+                    // println!("ratio {}", ratio);
                     return WalkResult::Walked(Vec::new());
                 }
                 // finish iterating simple path
@@ -276,6 +300,7 @@ impl Trail {
                     let new_trails = new_trails
                         .into_iter()
                         .filter_map(|trail| trail.walk_dead_end())
+                        .filter_map(|trail| trail.walk_good_end())
                         .collect::<Vec<_>>();
                     if new_trails.len() == 1 {
                         queue.push(new_trails.into_iter().next().unwrap());
@@ -288,17 +313,20 @@ impl Trail {
         unreachable!()
     }
 
+    // none if end is blocked
     fn walk_dead_end(mut self) -> Option<Self> {
         let mut walked = false;
         let mut queue = vec![self.dead_pos];
         while let Some(pos) = queue.pop() {
-            self.dead_pos = pos;
             // println!("{:?}", self);
-            if self.dead_pos == self.end {
+            if pos == self.end {
                 // println!("DEAD END");
                 // println!("{:?}", self);
-                return None;
+                //FIXME its not the end bc a other dir might find the end, since good and is walking too
+                *self.trail.get_mut(pos.0, pos.1).unwrap() = Tile::Path(false);
+                return Some(self);
             }
+            self.dead_pos = pos;
             let possible_ways = enum_iterator::all::<Direction>()
                 .filter_map(|dir| self.dead_pos.walk(dir))
                 .filter(|pos| {
@@ -324,7 +352,6 @@ impl Trail {
                     for pos in possible_ways {
                         queue.push(pos);
                         *self.trail.get_mut(pos.0, pos.1).unwrap() = Tile::Forest;
-                        self.dead_pos = pos;
                     }
                     walked = true;
                 }
@@ -347,18 +374,64 @@ impl Trail {
             None
         }
     }
+
+    // none if end is blocked
+    fn walk_good_end(mut self) -> Option<Self> {
+        let mut queue = vec![self.end];
+        while let Some(pos) = queue.pop() {
+            self.end = pos;
+            // println!("{:?}", self);
+            // if self.dead_pos == self.end {
+            //     // println!("DEAD END");
+            //     // println!("{:?}", self);
+            //     return None;
+            // }
+            let possible_ways = enum_iterator::all::<Direction>()
+                .filter_map(|dir| self.end.walk(dir))
+                .filter(|pos| {
+                    let tile = self.trail.get(pos.0, pos.1);
+                    if let Some(tile) = tile {
+                        match tile {
+                            Tile::Forest => false,
+                            Tile::Path(true) => false,
+                            Tile::Path(false) => true,
+                            Tile::Slope(true, _) => false,
+                            Tile::Slope(false, _) => true,
+                        }
+                    } else {
+                        false
+                    }
+                })
+                .collect::<Vec<_>>();
+
+            match possible_ways.len() {
+                0 => {
+                    return None;
+                }
+                1 => {
+                    self.path_len += 1;
+                    let pos = possible_ways.into_iter().next().unwrap();
+                    *self.trail.get_mut(pos.0, pos.1).unwrap() = Tile::Path(true);
+                    queue.push(pos);
+                }
+                _ => {
+                    *self.trail.get_mut(self.end.0, self.end.1).unwrap() = Tile::Path(false);
+                    return Some(self);
+                }
+            }
+        }
+        unreachable!()
+    }
 }
 
 pub fn cal_longest_hike(input: &str) -> Result<usize> {
     let trail = Trail::new(input);
-    let hikes = trail.get_hike_len(false);
-    let longest = hikes.into_iter().max().unwrap();
+    let longest = trail.get_hike_len(false);
     Ok(longest)
 }
 
 pub fn cal_longest_hike_noslope(input: &str) -> Result<usize> {
     let trail = Trail::new(input);
-    let hikes = trail.get_hike_len(true);
-    let longest = hikes.into_iter().max().unwrap();
+    let longest = trail.get_hike_len(true);
     Ok(longest)
 }
