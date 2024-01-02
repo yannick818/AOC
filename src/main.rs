@@ -119,7 +119,11 @@ fn main() -> Result<()> {
     let input = read_file("input/23.txt")?;
     measure!("23.1", d23_a_long_walk::cal_longest_hike(&input)?);  
     //TODO improve this, it needs 60s on mac air m1
-    measure!("23.2", d23_a_long_walk::cal_longest_hike_noslope(&input)?); 
+    // measure!("23.2", d23_a_long_walk::cal_longest_hike_noslope(&input)?); 
+
+    let input = read_file("input/24.txt")?;
+    measure!("24.1", d24_never_tell_me_the_odds::cal_future_intersections(&input, 200_000_000_000_000..=400_000_000_000_000)?);  
+    // measure!("24.2", d22_sand_slabs::cal_falling_bricks(&input)?); 
 
     Ok(())
 }
