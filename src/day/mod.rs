@@ -22,3 +22,4 @@ pub mod d21_step_counter;
 pub mod d22_sand_slabs;
 pub mod d23_a_long_walk;
 pub mod d24_never_tell_me_the_odds;
+pub mod d25_snowverload;

@@ -4,17 +4,22 @@ use std::{fmt::Debug, ops::RangeInclusive};
 
 use crate::prelude::*;
 
-#[test]
-fn test_future_intersections() {
-    let input = "19, 13, 30 @ -2,  1, -2
+#[allow(dead_code)]
+const INPUT: &str = "19, 13, 30 @ -2,  1, -2
 18, 19, 22 @ -1, -1, -2
 20, 25, 34 @ -2, -2, -4
 12, 31, 28 @ -1, -2, -1
 20, 19, 15 @  1, -5, -3";
 
+#[test]
+fn test_future_intersections() {
     let range = 7..=27;
+    assert_eq!(cal_future_intersections(INPUT, range).unwrap(), 2);
+}
 
-    assert_eq!(cal_future_intersections(input, range).unwrap(), 2);
+#[test]
+fn test_rock_start_sum() {
+    assert_eq!(cal_rock_start_sum(INPUT).unwrap(), 47);
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -116,4 +121,9 @@ pub fn cal_future_intersections(input: &str, range: RangeInclusive<isize>) -> Re
     let range = *range.start() as f64..=*range.end() as f64;
     let count = storm.count_intersections(range);
     Ok(count)
+}
+
+#[allow(dead_code)]
+pub fn cal_rock_start_sum(_input: &str) -> Result<isize> {
+    todo!("implement throwing the rock perfectly")
 }

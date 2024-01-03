@@ -124,6 +124,10 @@ fn main() -> Result<()> {
     let input = read_file("input/24.txt")?;
     measure!("24.1", d24_never_tell_me_the_odds::cal_future_intersections(&input, 200_000_000_000_000..=400_000_000_000_000)?);  
     // measure!("24.2", d22_sand_slabs::cal_falling_bricks(&input)?); 
+    
+    // let input = read_file("input/25.txt")?;
+    // measure!("25.1", d25_snowverload::cal_group_size(&input)?);  
+    // measure!("25.2", d21_step_counter::cal_plot_count_extending(&input, 26501365)?); 
 
     Ok(())
 }

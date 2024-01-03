@@ -402,6 +402,7 @@ pub fn cal_longest_hike(input: &str) -> Result<usize> {
     Ok(longest)
 }
 
+#[allow(dead_code)]
 pub fn cal_longest_hike_noslope(input: &str) -> Result<usize> {
     let trail = Trail::new(input);
     let longest = trail.get_hike_len(true);
